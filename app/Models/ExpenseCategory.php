@@ -9,4 +9,9 @@ class ExpenseCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpenseCategoryFactory> */
     use HasFactory;
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
 }

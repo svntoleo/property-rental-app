@@ -9,4 +9,19 @@ class Accommodation extends Model
 {
     /** @use HasFactory<\Database\Factories\AccommodationFactory> */
     use HasFactory;
+
+    public function property()
+    {
+        return $this->belongsTo(Property::class);
+    }
+
+    public function stays()
+    {
+        return $this->hasMany(Stay::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
 }

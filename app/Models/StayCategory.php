@@ -9,4 +9,9 @@ class StayCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\StayCategoryFactory> */
     use HasFactory;
+
+    public function stays()
+    {
+        return $this->hasMany(Stay::class);
+    }
 }
