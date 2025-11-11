@@ -10,6 +10,15 @@ class Expense extends Model
     /** @use HasFactory<\Database\Factories\ExpenseFactory> */
     use HasFactory;
 
+    /**
+     * Mass-assignable attributes.
+     */
+    protected $fillable = [
+        'property_id',
+        'accommodation_id',
+        'expense_category_id',
+    ];
+
     public function property()
     {
         return $this->belongsTo(Property::class);

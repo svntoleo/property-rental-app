@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('stay_id')->nullable(false)->constrained();
             $table->timestamps();
         });
     }

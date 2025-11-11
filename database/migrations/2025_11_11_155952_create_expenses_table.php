@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('property_id')->nullable(false)->constrained();
+            $table->foreignId('accommodation_id')->constrained();
+            $table->foreignId('expense_category_id')->constrained();
             $table->timestamps();
         });
     }

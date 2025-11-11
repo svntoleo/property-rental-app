@@ -10,6 +10,14 @@ class Accommodation extends Model
     /** @use HasFactory<\Database\Factories\AccommodationFactory> */
     use HasFactory;
 
+    /**
+     * Mass-assignable attributes.
+     */
+    protected $fillable = [
+        'property_id',
+        'label',
+    ];
+
     public function property()
     {
         return $this->belongsTo(Property::class);

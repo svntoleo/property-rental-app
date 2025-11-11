@@ -10,6 +10,14 @@ class Property extends Model
     /** @use HasFactory<\Database\Factories\PropertyFactory> */
     use HasFactory;
 
+    /**
+     * Mass-assignable attributes.
+     */
+    protected $fillable = [
+        'label',
+        'address',
+    ];
+
     public function accommodations()
     {
         return $this->hasMany(Accommodation::class);
