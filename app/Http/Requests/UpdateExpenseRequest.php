@@ -11,7 +11,7 @@ class UpdateExpenseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'property_id' => ['required', 'integer', 'exists:properties,id'],
+            'accommodation_id' => ['required', 'integer', 'exists:accommodations,id'],
+            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
+            'label' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
         ];
     }
 }

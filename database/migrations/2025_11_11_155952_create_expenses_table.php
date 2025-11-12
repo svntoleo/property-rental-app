@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('property_id')->nullable(false)->constrained();
             $table->foreignId('accommodation_id')->constrained();
             $table->foreignId('expense_category_id')->constrained();
+            $table->string('label', 255);
+            $table->decimal('price', 10, 2);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

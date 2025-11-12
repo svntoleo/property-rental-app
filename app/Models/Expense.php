@@ -17,6 +17,16 @@ class Expense extends Model
         'property_id',
         'accommodation_id',
         'expense_category_id',
+        'label',
+        'price',
+        'description',
+    ];
+
+    /**
+     * Cast price to decimal.
+     */
+    protected $casts = [
+        'price' => 'decimal:2',
     ];
 
     public function property()

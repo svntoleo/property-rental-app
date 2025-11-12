@@ -11,9 +11,11 @@ class StayCategory extends Model
     use HasFactory;
 
     /**
-     * Mass-assignable attributes (no custom columns beyond id and timestamps).
+     * Mass-assignable attributes.
      */
-    protected $fillable = [];
+    protected $fillable = [
+        'label',
+    ];
 
     public function stays()
     {

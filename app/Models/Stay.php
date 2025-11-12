@@ -20,6 +20,7 @@ class Stay extends Model
         'price',
         'start_date',
         'end_date',
+        'due_date',
     ];
 
     /**
@@ -28,6 +29,7 @@ class Stay extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'due_date' => 'date',
         'price' => 'decimal:2',
     ];
 

@@ -16,6 +16,7 @@ class Property extends Model
     protected $fillable = [
         'label',
         'address',
+        'description',
     ];
 
     public function accommodations()

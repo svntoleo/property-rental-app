@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('stay_id')->nullable(false)->constrained();
+            $table->string('name', 255);
+            $table->string('email', 255)->nullable()->unique();
+            $table->string('phone', 20)->nullable();
+            $table->string('cpf', 11)->nullable()->unique();
             $table->timestamps();
         });
     }

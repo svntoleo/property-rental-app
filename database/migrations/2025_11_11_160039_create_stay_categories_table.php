@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('stay_categories', function (Blueprint $table) {
             $table->id();
+            $table->string('label', 255);
             $table->timestamps();
         });
     }

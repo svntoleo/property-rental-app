@@ -11,7 +11,7 @@ class StoreAccommodationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,8 @@ class StoreAccommodationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'property_id' => ['required', 'integer', 'exists:properties,id'],
+            'label' => ['required', 'string', 'max:255'],
         ];
     }
 }

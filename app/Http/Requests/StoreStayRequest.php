@@ -11,7 +11,7 @@ class StoreStayRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class StoreStayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'accommodation_id' => ['required', 'integer', 'exists:accommodations,id'],
+            'stay_category_id' => ['required', 'integer', 'exists:stay_categories,id'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'due_date' => ['nullable', 'date'],
         ];
     }
 }
