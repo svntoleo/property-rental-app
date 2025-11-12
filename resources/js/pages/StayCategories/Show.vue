@@ -6,10 +6,17 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 interface Stay {
     id: number;
@@ -31,7 +38,7 @@ interface StayCategory {
 }
 
 interface Props {
-    stayCategory: StayCategory;
+    category: StayCategory;
 }
 
 const props = defineProps<Props>();
@@ -46,14 +53,14 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/stay-categories',
     },
     {
-        title: props.stayCategory.label,
-        href: `/stay-categories/${props.stayCategory.id}`,
+        title: props.category.label,
+        href: `/stay-categories/${props.category.id}`,
     },
 ];
 
 const deleteCategory = () => {
     if (confirm('Are you sure you want to delete this category?')) {
-        router.delete(`/stay-categories/${props.stayCategory.id}`);
+        router.delete(`/stay-categories/${props.category.id}`);
     }
 };
 
@@ -74,14 +81,14 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-    <Head :title="stayCategory.label" />
+    <Head :title="category.label" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold">{{ stayCategory.label }}</h1>
+                <h1 class="text-2xl font-bold">{{ category.label }}</h1>
                 <div class="flex gap-2">
-                    <Link :href="`/stay-categories/${stayCategory.id}/edit`">
+                    <Link :href="`/stay-categories/${category.id}/edit`">
                         <Button variant="outline">Edit</Button>
                     </Link>
                     <Button variant="destructive" @click="deleteCategory"
@@ -98,45 +105,53 @@ const formatDate = (date: string) => {
                     <div>
                         <p class="text-sm font-medium">Total Stays</p>
                         <p class="text-2xl font-bold">
-                            {{ stayCategory.stays?.length || 0 }}
+                            {{ category.stays?.length || 0 }}
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            <div v-if="stayCategory.stays?.length" class="grid gap-4">
+            <div v-if="category.stays?.length" class="space-y-4">
                 <h2 class="text-xl font-semibold">Stays</h2>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <Card v-for="stay in stayCategory.stays" :key="stay.id">
-                        <CardHeader>
-                            <CardTitle>
-                                {{ stay.accommodation.property.label }}
-                            </CardTitle>
-                            <CardDescription>
-                                {{ stay.accommodation.label }}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent class="space-y-2">
-                            <div>
-                                <p class="text-sm font-medium">Period</p>
-                                <p class="text-sm text-muted-foreground">
-                                    {{ formatDate(stay.start_date) }} -
-                                    {{ formatDate(stay.end_date) }}
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium">Price</p>
-                                <p class="text-sm font-semibold">
-                                    {{ formatCurrency(stay.price) }}
-                                </p>
-                            </div>
-                            <Link :href="`/stays/${stay.id}`">
-                                <Button variant="outline" size="sm"
-                                    >View Details</Button
+                <div class="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Property</TableHead>
+                                <TableHead>Accommodation</TableHead>
+                                <TableHead>Period</TableHead>
+                                <TableHead>Price</TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="stay in category.stays"
+                                :key="stay.id"
+                            >
+                                <TableCell class="font-medium">{{
+                                    stay.accommodation.property.label
+                                }}</TableCell>
+                                <TableCell>{{
+                                    stay.accommodation.label
+                                }}</TableCell>
+                                <TableCell
+                                    >{{ formatDate(stay.start_date) }} -
+                                    {{ formatDate(stay.end_date) }}</TableCell
                                 >
-                            </Link>
-                        </CardContent>
-                    </Card>
+                                <TableCell>{{
+                                    formatCurrency(stay.price)
+                                }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Link :href="`/stays/${stay.id}`">
+                                        <Button variant="outline" size="sm"
+                                            >View</Button
+                                        >
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
         </div>

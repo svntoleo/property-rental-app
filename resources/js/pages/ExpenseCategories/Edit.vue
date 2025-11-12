@@ -20,7 +20,7 @@ interface ExpenseCategory {
 }
 
 interface Props {
-    expenseCategory: ExpenseCategory;
+    category: ExpenseCategory;
 }
 
 const props = defineProps<Props>();
@@ -35,26 +35,26 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/expense-categories',
     },
     {
-        title: props.expenseCategory.label,
-        href: `/expense-categories/${props.expenseCategory.id}`,
+        title: props.category.label,
+        href: `/expense-categories/${props.category.id}`,
     },
     {
         title: 'Edit',
-        href: `/expense-categories/${props.expenseCategory.id}/edit`,
+        href: `/expense-categories/${props.category.id}/edit`,
     },
 ];
 
 const form = useForm({
-    label: props.expenseCategory.label,
+    label: props.category.label,
 });
 
 const submit = () => {
-    form.put(`/expense-categories/${props.expenseCategory.id}`);
+    form.put(`/expense-categories/${props.category.id}`);
 };
 </script>
 
 <template>
-    <Head :title="`Edit ${expenseCategory.label}`" />
+    <Head :title="`Edit ${category.label}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
@@ -86,7 +86,7 @@ const submit = () => {
                                 variant="outline"
                                 @click="
                                     $inertia.visit(
-                                        `/expense-categories/${expenseCategory.id}`
+                                        `/expense-categories/${category.id}`
                                     )
                                 "
                             >

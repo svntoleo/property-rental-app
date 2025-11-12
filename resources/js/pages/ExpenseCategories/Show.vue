@@ -6,10 +6,17 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 interface Property {
     label: string;
@@ -34,7 +41,7 @@ interface ExpenseCategory {
 }
 
 interface Props {
-    expenseCategory: ExpenseCategory;
+    category: ExpenseCategory;
 }
 
 const props = defineProps<Props>();
@@ -49,14 +56,14 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/expense-categories',
     },
     {
-        title: props.expenseCategory.label,
-        href: `/expense-categories/${props.expenseCategory.id}`,
+        title: props.category.label,
+        href: `/expense-categories/${props.category.id}`,
     },
 ];
 
 const deleteCategory = () => {
     if (confirm('Are you sure you want to delete this category?')) {
-        router.delete(`/expense-categories/${props.expenseCategory.id}`);
+        router.delete(`/expense-categories/${props.category.id}`);
     }
 };
 
@@ -69,15 +76,15 @@ const formatCurrency = (value: number) => {
 </script>
 
 <template>
-    <Head :title="expenseCategory.label" />
+    <Head :title="category.label" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold">{{ expenseCategory.label }}</h1>
+                <h1 class="text-2xl font-bold">{{ category.label }}</h1>
                 <div class="flex gap-2">
                     <Link
-                        :href="`/expense-categories/${expenseCategory.id}/edit`"
+                        :href="`/expense-categories/${category.id}/edit`"
                     >
                         <Button variant="outline">Edit</Button>
                     </Link>
@@ -95,42 +102,52 @@ const formatCurrency = (value: number) => {
                     <div>
                         <p class="text-sm font-medium">Total Expenses</p>
                         <p class="text-2xl font-bold">
-                            {{ expenseCategory.expenses?.length || 0 }}
+                            {{ category.expenses?.length || 0 }}
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            <div v-if="expenseCategory.expenses?.length" class="grid gap-4">
+            <div v-if="category.expenses?.length" class="space-y-4">
                 <h2 class="text-xl font-semibold">Expenses</h2>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <Card
-                        v-for="expense in expenseCategory.expenses"
-                        :key="expense.id"
-                    >
-                        <CardHeader>
-                            <CardTitle>{{ expense.label }}</CardTitle>
-                            <CardDescription>
-                                {{ expense.property.label }}
-                                <span v-if="expense.accommodation">
-                                    - {{ expense.accommodation.label }}
-                                </span>
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent class="space-y-2">
-                            <div>
-                                <p class="text-sm font-medium">Price</p>
-                                <p class="text-sm font-semibold">
-                                    {{ formatCurrency(expense.price) }}
-                                </p>
-                            </div>
-                            <Link :href="`/expenses/${expense.id}`">
-                                <Button variant="outline" size="sm"
-                                    >View Details</Button
-                                >
-                            </Link>
-                        </CardContent>
-                    </Card>
+                <div class="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Label</TableHead>
+                                <TableHead>Property</TableHead>
+                                <TableHead>Accommodation</TableHead>
+                                <TableHead>Price</TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="expense in category.expenses"
+                                :key="expense.id"
+                            >
+                                <TableCell class="font-medium">{{
+                                    expense.label
+                                }}</TableCell>
+                                <TableCell>{{
+                                    expense.property.label
+                                }}</TableCell>
+                                <TableCell>{{
+                                    expense.accommodation?.label || 'N/A'
+                                }}</TableCell>
+                                <TableCell>{{
+                                    formatCurrency(expense.price)
+                                }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Link :href="`/expenses/${expense.id}`">
+                                        <Button variant="outline" size="sm"
+                                            >View</Button
+                                        >
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
         </div>

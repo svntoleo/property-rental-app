@@ -12,6 +12,7 @@ class StayCategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'label' => $this->label,
+            'stays' => StayResource::collection($this->whenLoaded('stays')),
         ];
     }
 }

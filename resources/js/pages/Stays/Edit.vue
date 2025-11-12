@@ -33,7 +33,7 @@ interface Stay {
     stay_category_id: number;
     start_date: string;
     end_date: string;
-    due_date: string;
+    due_date: number | null;
     price: number;
     category: StayCategory;
 }
@@ -41,7 +41,7 @@ interface Stay {
 interface Props {
     stay: Stay;
     accommodations: Accommodation[];
-    stayCategories: StayCategory[];
+    categories: StayCategory[];
 }
 
 const props = defineProps<Props>();
@@ -70,7 +70,7 @@ const form = useForm({
     stay_category_id: props.stay.stay_category_id,
     start_date: props.stay.start_date,
     end_date: props.stay.end_date,
-    due_date: props.stay.due_date,
+    due_date: (props.stay.due_date ?? undefined) as number | undefined,
     price: props.stay.price,
 });
 
@@ -128,7 +128,7 @@ const submit = () => {
                             >
                                 <option value="">Select a category</option>
                                 <option
-                                    v-for="category in stayCategories"
+                                    v-for="category in categories"
                                     :key="category.id"
                                     :value="category.id"
                                 >
@@ -161,11 +161,14 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="due_date">Due Date</Label>
+                            <Label for="due_date">Due Day of Month</Label>
                             <Input
                                 id="due_date"
-                                v-model="form.due_date"
-                                type="date"
+                                v-model.number="form.due_date"
+                                type="number"
+                                min="1"
+                                max="31"
+                                placeholder="Day of month (1-31)"
                             />
                             <InputError :message="form.errors.due_date" />
                         </div>

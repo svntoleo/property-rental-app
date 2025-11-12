@@ -49,7 +49,7 @@ class StayCategoryController extends Controller
      */
     public function show(StayCategory $stayCategory)
     {
-        $stayCategory->loadCount('stays');
+        $stayCategory->load(['stays.accommodation.property']);
 
         return Inertia::render('StayCategories/Show', [
             'category' => new StayCategoryResource($stayCategory),

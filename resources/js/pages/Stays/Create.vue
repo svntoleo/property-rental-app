@@ -54,7 +54,7 @@ const form = useForm({
     stay_category_id: '',
     start_date: '',
     end_date: '',
-    due_date: '',
+    due_date: undefined as number | undefined,
     price: '',
 });
 
@@ -145,11 +145,14 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="due_date">Due Date</Label>
+                            <Label for="due_date">Due Day of Month</Label>
                             <Input
                                 id="due_date"
-                                v-model="form.due_date"
-                                type="date"
+                                v-model.number="form.due_date"
+                                type="number"
+                                min="1"
+                                max="31"
+                                placeholder="Day of month (1-31)"
                             />
                             <InputError :message="form.errors.due_date" />
                         </div>

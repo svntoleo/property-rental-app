@@ -24,6 +24,7 @@ import {
     Users,
     ReceiptText,
     Tags,
+    Trash2,
 } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
@@ -69,18 +70,18 @@ const mainNavItems: NavItem[] = [
         href: '/expense-categories',
         icon: Tags,
     },
+    {
+        title: 'Trash',
+        href: '/trash',
+        icon: Trash2,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
         title: 'Documentation',
         href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        icon: Folder,
     },
 ];
 </script>

@@ -19,12 +19,68 @@ class StayController extends Controller
      */
     public function index()
     {
-        $stays = Stay::with(['accommodation.property', 'category', 'tenants'])
-            ->latest()
-            ->paginate(15);
+        $search = request('search');
+        $sortBy = request('sort_by');
+        $sortDir = request('sort_dir') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'category' => 'stay_categories.label',
+            'property' => 'properties.label',
+            'accommodation' => 'accommodations.label',
+            'start_date' => 'stays.start_date',
+            'end_date' => 'stays.end_date',
+            'due_date' => 'stays.due_date',
+            'price' => 'stays.price',
+            'created_at' => 'stays.created_at',
+        ];
+
+        $query = Stay::with(['accommodation.property', 'category', 'tenants'])
+            ->whereHas('accommodation', function ($q) {
+                $q->whereNull('deleted_at')
+                    ->whereHas('property', function ($p) {
+                        $p->whereNull('deleted_at');
+                    });
+            })
+            ->when(!empty($search), function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('category', function ($cat) use ($search) {
+                        $cat->where('label', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('accommodation', function ($acc) use ($search) {
+                        $acc->where('label', 'like', "%{$search}%")
+                            ->orWhereHas('property', function ($prop) use ($search) {
+                                $prop->where('label', 'like', "%{$search}%");
+                            });
+                    });
+                });
+            });
+
+        if ($sortBy && isset($allowedSorts[$sortBy])) {
+            if (in_array($sortBy, ['category', 'property', 'accommodation'])) {
+                // Join related tables for sorting by their labels
+                $query->leftJoin('accommodations', 'accommodations.id', '=', 'stays.accommodation_id')
+                    ->leftJoin('properties', 'properties.id', '=', 'accommodations.property_id')
+                    ->leftJoin('stay_categories', 'stay_categories.id', '=', 'stays.stay_category_id')
+                    ->select('stays.*')
+                    ->orderBy($allowedSorts[$sortBy], $sortDir);
+            } else {
+                $query->orderBy($allowedSorts[$sortBy], $sortDir);
+            }
+        } else {
+            $query->latest();
+        }
+
+        $stays = $query->paginate(15)->appends([
+            'search' => $search,
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
+        ]);
 
         return Inertia::render('Stays/Index', [
             'stays' => StayResource::collection($stays),
+            'search' => $search ?? '',
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ]);
     }
 
@@ -75,6 +131,7 @@ class StayController extends Controller
      */
     public function edit(Stay $stay)
     {
+        $stay->load('category');
         $accommodations = Accommodation::with('property')->get();
         $categories = StayCategory::all();
 

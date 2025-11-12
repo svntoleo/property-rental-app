@@ -15,12 +15,43 @@ class PropertyController extends Controller
      */
     public function index()
     {
-        $properties = Property::with(['accommodations', 'expenses.category'])
-            ->latest()
-            ->paginate(15);
+        $search = request('search');
+        $sortBy = request('sort_by');
+        $sortDir = request('sort_dir') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'label' => 'properties.label',
+            'address' => 'properties.address',
+            'description' => 'properties.description',
+            'created_at' => 'properties.created_at',
+        ];
+
+        $query = Property::with(['accommodations', 'expenses.category'])
+            ->when(!empty($search), function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('label', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            });
+
+        if ($sortBy && isset($allowedSorts[$sortBy])) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            $query->latest();
+        }
+
+        $properties = $query->paginate(15)->appends([
+            'search' => $search,
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
+        ]);
 
         return Inertia::render('Properties/Index', [
             'properties' => PropertyResource::collection($properties),
+            'search' => $search ?? '',
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ]);
     }
 

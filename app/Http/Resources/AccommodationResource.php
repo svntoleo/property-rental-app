@@ -16,6 +16,7 @@ class AccommodationResource extends JsonResource
             'label' => $this->label,
             'stays' => StayResource::collection($this->whenLoaded('stays')),
             'expenses' => ExpenseResource::collection($this->whenLoaded('expenses')),
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }

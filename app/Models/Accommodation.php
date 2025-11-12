@@ -20,7 +20,8 @@ class Accommodation extends Model
 
     public function property()
     {
-        return $this->belongsTo(Property::class);
+        // Include soft-deleted properties for historical viewing
+        return $this->belongsTo(Property::class)->withTrashed();
     }
 
     public function stays()

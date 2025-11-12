@@ -20,7 +20,7 @@ interface StayCategory {
 }
 
 interface Props {
-    stayCategory: StayCategory;
+    category: StayCategory;
 }
 
 const props = defineProps<Props>();
@@ -35,26 +35,26 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/stay-categories',
     },
     {
-        title: props.stayCategory.label,
-        href: `/stay-categories/${props.stayCategory.id}`,
+        title: props.category.label,
+        href: `/stay-categories/${props.category.id}`,
     },
     {
         title: 'Edit',
-        href: `/stay-categories/${props.stayCategory.id}/edit`,
+        href: `/stay-categories/${props.category.id}/edit`,
     },
 ];
 
 const form = useForm({
-    label: props.stayCategory.label,
+    label: props.category.label,
 });
 
 const submit = () => {
-    form.put(`/stay-categories/${props.stayCategory.id}`);
+    form.put(`/stay-categories/${props.category.id}`);
 };
 </script>
 
 <template>
-    <Head :title="`Edit ${stayCategory.label}`" />
+    <Head :title="`Edit ${category.label}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
@@ -86,7 +86,7 @@ const submit = () => {
                                 variant="outline"
                                 @click="
                                     $inertia.visit(
-                                        `/stay-categories/${stayCategory.id}`
+                                        `/stay-categories/${category.id}`
                                     )
                                 "
                             >

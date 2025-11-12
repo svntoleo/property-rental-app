@@ -18,9 +18,10 @@ class StayResource extends JsonResource
             'price' => $this->price,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
-            'due_date' => $this->due_date?->toDateString(),
+            'due_date' => $this->due_date, // Day of month as integer (1-31)
             'active' => $this->active,
             'tenants' => TenantResource::collection($this->whenLoaded('tenants')),
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }

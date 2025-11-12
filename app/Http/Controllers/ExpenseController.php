@@ -21,12 +21,59 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        $expenses = Expense::with(['property', 'accommodation', 'category'])
-            ->latest()
-            ->paginate(15);
+        $search = request('search');
+        $sortBy = request('sort_by');
+        $sortDir = request('sort_dir') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'label' => 'expenses.label',
+            'description' => 'expenses.description',
+            'price' => 'expenses.price',
+            'category' => 'expense_categories.label',
+            'property' => 'properties.label',
+            'accommodation' => 'accommodations.label',
+            'created_at' => 'expenses.created_at',
+        ];
+
+        $query = Expense::with(['property', 'accommodation', 'category'])
+            ->when(!empty($search), function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('label', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas('category', function ($cat) use ($search) {
+                            $cat->where('label', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('property', function ($prop) use ($search) {
+                            $prop->where('label', 'like', "%{$search}%");
+                        });
+                });
+            });
+
+        if ($sortBy && isset($allowedSorts[$sortBy])) {
+            if (in_array($sortBy, ['category', 'property', 'accommodation'])) {
+                $query->leftJoin('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')
+                    ->leftJoin('properties', 'properties.id', '=', 'expenses.property_id')
+                    ->leftJoin('accommodations', 'accommodations.id', '=', 'expenses.accommodation_id')
+                    ->select('expenses.*')
+                    ->orderBy($allowedSorts[$sortBy], $sortDir);
+            } else {
+                $query->orderBy($allowedSorts[$sortBy], $sortDir);
+            }
+        } else {
+            $query->latest();
+        }
+
+        $expenses = $query->paginate(15)->appends([
+            'search' => $search,
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
+        ]);
 
         return Inertia::render('Expenses/Index', [
             'expenses' => ExpenseResource::collection($expenses),
+            'search' => $search ?? '',
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ]);
     }
 

@@ -35,7 +35,7 @@ interface PaginationMeta {
 }
 
 interface Props {
-    expenseCategories: {
+    categories: {
         data: ExpenseCategory[];
         meta: PaginationMeta;
     };
@@ -75,7 +75,7 @@ const deleteCategory = (id: number) => {
 
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card
-                    v-for="category in expenseCategories.data"
+                    v-for="category in categories.data"
                     :key="category.id"
                 >
                     <CardHeader>
@@ -107,11 +107,11 @@ const deleteCategory = (id: number) => {
             </div>
 
             <div
-                v-if="expenseCategories.meta.last_page > 1"
+                v-if="categories.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
             >
                 <Link
-                    v-for="(link, index) in expenseCategories.meta.links"
+                    v-for="(link, index) in categories.meta.links"
                     :key="index"
                     :href="link.url || '#'"
                     :class="{

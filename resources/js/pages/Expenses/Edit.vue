@@ -45,7 +45,7 @@ interface Props {
     expense: Expense;
     properties: Property[];
     accommodations: Accommodation[];
-    expenseCategories: ExpenseCategory[];
+    categories: ExpenseCategory[];
 }
 
 const props = defineProps<Props>();
@@ -160,7 +160,7 @@ const filteredAccommodations = computed(() => {
                             >
                                 <option value="">Select a category</option>
                                 <option
-                                    v-for="category in expenseCategories"
+                                    v-for="category in categories"
                                     :key="category.id"
                                     :value="category.id"
                                 >

@@ -33,14 +33,15 @@ class Stay extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
-            'due_date' => 'date',
+            'due_date' => 'integer',
             'price' => 'decimal:2',
         ];
     }
 
     public function accommodation()
     {
-        return $this->belongsTo(Accommodation::class);
+        // Include soft-deleted accommodations so history remains viewable
+        return $this->belongsTo(Accommodation::class)->withTrashed();
     }
 
     public function category()

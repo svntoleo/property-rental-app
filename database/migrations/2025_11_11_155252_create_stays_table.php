@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->date('start_date');
             $table->date('end_date');
-            $table->date('due_date')->nullable();
+            $table->unsignedTinyInteger('due_date')->nullable()->comment('Day of month (1-31) when rent is due');
             $table->timestamps();
         });
     }

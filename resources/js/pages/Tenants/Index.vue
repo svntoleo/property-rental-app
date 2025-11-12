@@ -3,13 +3,16 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { ref, watch } from 'vue';
 
 interface Stay {
     id: number;
@@ -28,7 +31,7 @@ interface Tenant {
     name: string;
     email: string;
     phone: string;
-    cpf: string;
+    cpf_formatted: string;
     stay: Stay;
 }
 
@@ -54,6 +57,9 @@ interface Props {
         data: Tenant[];
         meta: PaginationMeta;
     };
+    search: string;
+    sort_by?: string;
+    sort_dir?: 'asc' | 'desc';
 }
 
 const props = defineProps<Props>();
@@ -68,6 +74,39 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/tenants',
     },
 ];
+
+const searchQuery = ref(props.search || '');
+const sortBy = ref<string>(props.sort_by || '');
+const sortDir = ref<'asc' | 'desc'>(props.sort_dir || 'desc');
+const applyParams = (extra: Record<string, any> = {}) => {
+    const params: Record<string, any> = {};
+    if (searchQuery.value) params.search = searchQuery.value;
+    if (sortBy.value) {
+        params.sort_by = sortBy.value;
+        params.sort_dir = sortDir.value;
+    }
+    Object.assign(params, extra);
+    router.get('/tenants', params, { preserveState: true, replace: true });
+};
+
+const toggleSort = (column: string) => {
+    if (sortBy.value === column) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = column;
+        sortDir.value = 'asc';
+    }
+    applyParams();
+};
+let debounceHandle: ReturnType<typeof setTimeout> | undefined;
+
+// Debounced live search
+watch(searchQuery, (q) => {
+    if (debounceHandle) clearTimeout(debounceHandle);
+    debounceHandle = setTimeout(() => {
+        applyParams();
+    }, 350);
+});
 
 const deleteTenant = (id: number) => {
     if (confirm('Are you sure you want to delete this tenant?')) {
@@ -96,43 +135,112 @@ const formatDate = (date: string) => {
                 </Link>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="tenant in tenants.data" :key="tenant.id">
-                    <CardHeader>
-                        <CardTitle>{{ tenant.name }}</CardTitle>
-                        <CardDescription>{{ tenant.email }}</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-2">
-                        <div>
-                            <p class="text-sm font-medium">Stay</p>
-                            <p class="text-sm text-muted-foreground">
-                                {{ tenant.stay.accommodation.property.label }} -
-                                {{ tenant.stay.accommodation.label }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                {{ formatDate(tenant.stay.start_date) }} -
-                                {{ formatDate(tenant.stay.end_date) }}
-                            </p>
-                        </div>
-                        <div class="flex gap-2">
-                            <Link :href="`/tenants/${tenant.id}`">
-                                <Button variant="outline" size="sm">View</Button>
-                            </Link>
-                            <Link :href="`/tenants/${tenant.id}/edit`">
-                                <Button variant="outline" size="sm">Edit</Button>
-                            </Link>
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                @click="deleteTenant(tenant.id)"
-                            >
-                                Delete
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div class="flex items-center gap-2">
+                <Input
+                    v-model="searchQuery"
+                    placeholder="Search tenants..."
+                    class="max-w-sm"
+                />
             </div>
 
+            <div class="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('name')">
+                                    Name
+                                    <span v-if="sortBy === 'name'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('email')">
+                                    Email
+                                    <span v-if="sortBy === 'email'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('cpf')">
+                                    CPF
+                                    <span v-if="sortBy === 'cpf'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('phone')">
+                                    Phone
+                                    <span v-if="sortBy === 'phone'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('property')">
+                                    Property
+                                    <span v-if="sortBy === 'property'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('accommodation')">
+                                    Accommodation
+                                    <span v-if="sortBy === 'accommodation'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('start_date')">
+                                    Stay Period
+                                    <span v-if="sortBy === 'start_date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead class="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-for="tenant in tenants.data" :key="tenant.id">
+                            <TableCell class="font-medium">{{
+                                tenant.name
+                            }}</TableCell>
+                            <TableCell>{{ tenant.email }}</TableCell>
+                            <TableCell>{{ tenant.cpf_formatted }}</TableCell>
+                            <TableCell>{{ tenant.phone }}</TableCell>
+                            <TableCell>
+                                {{ tenant.stay.accommodation.property.label }}
+                            </TableCell>
+                            <TableCell>
+                                {{ tenant.stay.accommodation.label }}
+                            </TableCell>
+                            <TableCell>
+                                {{ formatDate(tenant.stay.start_date) }} -
+                                {{ formatDate(tenant.stay.end_date) }}
+                            </TableCell>
+                            <TableCell class="text-right">
+                                <div class="flex justify-end gap-2">
+                                    <Link :href="`/tenants/${tenant.id}`">
+                                        <Button variant="outline" size="sm"
+                                            >View</Button
+                                        >
+                                    </Link>
+                                    <Link :href="`/tenants/${tenant.id}/edit`">
+                                        <Button variant="outline" size="sm"
+                                            >Edit</Button
+                                        >
+                                    </Link>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        @click="deleteTenant(tenant.id)"
+                                        >Delete</Button
+                                    >
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow v-if="tenants.data.length === 0">
+                            <TableCell colspan="8" class="text-center">
+                                No tenants found
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <!-- Pagination -->
             <div
                 v-if="tenants.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
@@ -143,6 +251,11 @@ const formatDate = (date: string) => {
                     :href="link.url || '#'"
                     :class="{
                         'pointer-events-none': !link.url,
+                    }"
+                    :data="{
+                        ...(searchQuery ? { search: searchQuery } : {}),
+                        ...(sortBy ? { sort_by: sortBy } : {}),
+                        ...(sortBy ? { sort_dir: sortDir } : {}),
                     }"
                 >
                     <Button

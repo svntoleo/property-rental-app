@@ -25,7 +25,7 @@ class StayFactory extends Factory
             'price' => fake()->randomFloat(2, 500, 5000),
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'due_date' => fake()->optional()->dateTimeBetween($startDate, $endDate),
+            'due_date' => fake()->optional()->numberBetween(1, 28), // Day of month (1-28 to be safe for all months)
         ];
     }
 }

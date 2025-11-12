@@ -11,7 +11,8 @@ class ExpenseCategoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'label' => $this->label
+            'label' => $this->label,
+            'expenses' => ExpenseResource::collection($this->whenLoaded('expenses')),
         ];
     }
 }

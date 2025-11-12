@@ -18,7 +18,10 @@ class TenantResource extends JsonResource
             'phone' => $this->phone,
             'phone_formatted' => $this->phone_formatted,
             'cpf' => $this->cpf,
-            'cpf_formatted' => $this->cpf_formatted,
+                // Use the accessor-defined attribute name (formatted_cpf)
+                // but expose it to the frontend as cpf_formatted for consistency
+                'cpf_formatted' => $this->formatted_cpf,
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }

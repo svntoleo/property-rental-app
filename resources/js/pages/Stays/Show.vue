@@ -35,7 +35,7 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
-    due_date: string;
+    due_date: number | null;
     price: number;
     accommodation: Accommodation;
     category: StayCategory;
@@ -128,9 +128,9 @@ const formatDate = (date: string) => {
                             </p>
                         </div>
                         <div>
-                            <p class="text-sm font-medium">Due Date</p>
+                            <p class="text-sm font-medium">Due Day of Month</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ formatDate(stay.due_date) }}
+                                {{ stay.due_date ? `Day ${stay.due_date}` : '-' }}
                             </p>
                         </div>
                         <div>

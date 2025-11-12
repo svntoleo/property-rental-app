@@ -49,7 +49,7 @@ class ExpenseCategoryController extends Controller
      */
     public function show(ExpenseCategory $expenseCategory)
     {
-        $expenseCategory->loadCount('expenses');
+        $expenseCategory->load(['expenses.property', 'expenses.accommodation']);
 
         return Inertia::render('ExpenseCategories/Show', [
             'category' => new ExpenseCategoryResource($expenseCategory),

@@ -20,6 +20,7 @@ class ExpenseResource extends JsonResource
             'label' => $this->label,
             'price' => $this->price,
             'description' => $this->description,
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }
