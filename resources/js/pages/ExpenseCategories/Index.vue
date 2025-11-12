@@ -1,0 +1,131 @@
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+
+interface ExpenseCategory {
+    id: number;
+    label: string;
+    expenses_count: number;
+}
+
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginationMeta {
+    current_page: number;
+    from: number;
+    last_page: number;
+    links: PaginationLink[];
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+}
+
+interface Props {
+    expenseCategories: {
+        data: ExpenseCategory[];
+        meta: PaginationMeta;
+    };
+}
+
+const props = defineProps<Props>();
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+    {
+        title: 'Expense Categories',
+        href: '/expense-categories',
+    },
+];
+
+const deleteCategory = (id: number) => {
+    if (confirm('Are you sure you want to delete this category?')) {
+        router.delete(`/expense-categories/${id}`);
+    }
+};
+</script>
+
+<template>
+    <Head title="Expense Categories" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <div class="flex h-full flex-1 flex-col gap-4 p-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold">Expense Categories</h1>
+                <Link href="/expense-categories/create">
+                    <Button>Create Category</Button>
+                </Link>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Card
+                    v-for="category in expenseCategories.data"
+                    :key="category.id"
+                >
+                    <CardHeader>
+                        <CardTitle>{{ category.label }}</CardTitle>
+                        <CardDescription>
+                            {{ category.expenses_count }} expense{{
+                                category.expenses_count !== 1 ? 's' : ''
+                            }}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="flex gap-2">
+                        <Link :href="`/expense-categories/${category.id}`">
+                            <Button variant="outline" size="sm">View</Button>
+                        </Link>
+                        <Link
+                            :href="`/expense-categories/${category.id}/edit`"
+                        >
+                            <Button variant="outline" size="sm">Edit</Button>
+                        </Link>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            @click="deleteCategory(category.id)"
+                        >
+                            Delete
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div
+                v-if="expenseCategories.meta.last_page > 1"
+                class="mt-4 flex items-center justify-center gap-2"
+            >
+                <Link
+                    v-for="(link, index) in expenseCategories.meta.links"
+                    :key="index"
+                    :href="link.url || '#'"
+                    :class="{
+                        'pointer-events-none': !link.url,
+                    }"
+                >
+                    <Button
+                        :variant="link.active ? 'default' : 'outline'"
+                        size="sm"
+                        :disabled="!link.url"
+                        v-html="link.label"
+                    />
+                </Link>
+            </div>
+        </div>
+    </AppLayout>
+</template>

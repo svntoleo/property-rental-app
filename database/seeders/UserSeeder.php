@@ -16,7 +16,10 @@ class UserSeeder extends Seeder
         // Primary test user (idempotent)
         User::firstOrCreate(
             ['email' => 'test@example.com'],
-            ['name' => 'Test User']
+            [
+                'name' => 'Test User',
+                'password' => Hash::make('password'),
+            ]
         );
 
         // Additional sample users (only if few users exist)

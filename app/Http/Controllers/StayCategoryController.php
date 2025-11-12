@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreStayCategoryRequest;
 use App\Http\Requests\UpdateStayCategoryRequest;
+use App\Http\Resources\StayCategoryResource;
 use App\Models\StayCategory;
+use Inertia\Inertia;
 
 class StayCategoryController extends Controller
 {
@@ -13,7 +15,13 @@ class StayCategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = StayCategory::withCount('stays')
+            ->latest()
+            ->paginate(15);
+
+        return Inertia::render('StayCategories/Index', [
+            'categories' => StayCategoryResource::collection($categories),
+        ]);
     }
 
     /**
@@ -21,7 +29,7 @@ class StayCategoryController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('StayCategories/Create');
     }
 
     /**
@@ -29,7 +37,11 @@ class StayCategoryController extends Controller
      */
     public function store(StoreStayCategoryRequest $request)
     {
-        //
+        $category = StayCategory::create($request->validated());
+
+        return redirect()
+            ->route('stay-categories.index')
+            ->with('success', 'Stay category created successfully.');
     }
 
     /**
@@ -37,7 +49,11 @@ class StayCategoryController extends Controller
      */
     public function show(StayCategory $stayCategory)
     {
-        //
+        $stayCategory->loadCount('stays');
+
+        return Inertia::render('StayCategories/Show', [
+            'category' => new StayCategoryResource($stayCategory),
+        ]);
     }
 
     /**
@@ -45,7 +61,9 @@ class StayCategoryController extends Controller
      */
     public function edit(StayCategory $stayCategory)
     {
-        //
+        return Inertia::render('StayCategories/Edit', [
+            'category' => new StayCategoryResource($stayCategory),
+        ]);
     }
 
     /**
@@ -53,7 +71,11 @@ class StayCategoryController extends Controller
      */
     public function update(UpdateStayCategoryRequest $request, StayCategory $stayCategory)
     {
-        //
+        $stayCategory->update($request->validated());
+
+        return redirect()
+            ->route('stay-categories.show', $stayCategory)
+            ->with('success', 'Stay category updated successfully.');
     }
 
     /**
@@ -61,6 +83,10 @@ class StayCategoryController extends Controller
      */
     public function destroy(StayCategory $stayCategory)
     {
-        //
+        $stayCategory->delete();
+
+        return redirect()
+            ->route('stay-categories.index')
+            ->with('success', 'Stay category deleted successfully.');
     }
 }
