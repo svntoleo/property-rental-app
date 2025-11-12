@@ -12,6 +12,10 @@ class ExpenseCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $categories = ['Utilities', 'Maintenance', 'Insurance', 'Taxes', 'Repairs', 'Cleaning', 'HOA Fees'];
+        
+        foreach ($categories as $category) {
+            \App\Models\ExpenseCategory::create(['label' => $category]);
+        }
     }
 }

@@ -12,6 +12,8 @@ class PropertySeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        \App\Models\Property::factory()
+            ->count(10)
+            ->create();
     }
 }

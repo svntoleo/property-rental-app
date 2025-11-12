@@ -17,7 +17,7 @@ class ExpenseCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'label' => fake()->randomElement(['Utilities', 'Maintenance', 'Insurance', 'Taxes', 'Repairs', 'Cleaning', 'HOA Fees']),
         ];
     }
 }

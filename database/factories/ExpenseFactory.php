@@ -17,7 +17,12 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'property_id' => \App\Models\Property::factory(),
+            'accommodation_id' => \App\Models\Accommodation::factory(),
+            'expense_category_id' => \App\Models\ExpenseCategory::factory(),
+            'label' => fake()->words(2, true),
+            'price' => fake()->randomFloat(2, 50, 2000),
+            'description' => fake()->optional()->sentence(),
         ];
     }
 }

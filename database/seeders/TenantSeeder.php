@@ -12,6 +12,11 @@ class TenantSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        // Create 1-2 tenants for each stay
+        \App\Models\Stay::all()->each(function ($stay) {
+            \App\Models\Tenant::factory()
+                ->count(rand(1, 2))
+                ->create(['stay_id' => $stay->id]);
+        });
     }
 }

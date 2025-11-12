@@ -17,7 +17,11 @@ class TenantFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'stay_id' => \App\Models\Stay::factory(),
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'phone' => fake()->numerify('###########'), // 11 digits
+            'cpf' => fake()->numerify('###########'), // 11 digits
         ];
     }
 }

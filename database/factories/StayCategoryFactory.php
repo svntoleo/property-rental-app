@@ -17,7 +17,7 @@ class StayCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'label' => fake()->randomElement(['Short-term', 'Long-term', 'Monthly', 'Seasonal', 'Student', 'Corporate']),
         ];
     }
 }

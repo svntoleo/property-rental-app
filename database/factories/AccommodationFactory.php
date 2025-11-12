@@ -17,7 +17,8 @@ class AccommodationFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'property_id' => \App\Models\Property::factory(),
+            'label' => fake()->randomElement(['Apt 101', 'Apt 102', 'Room A', 'Room B', 'Unit ' . fake()->numberBetween(100, 999)]),
         ];
     }
 }

@@ -17,7 +17,9 @@ class PropertyFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'label' => fake()->words(3, true),
+            'address' => fake()->address(),
+            'description' => fake()->optional()->paragraph(),
         ];
     }
 }

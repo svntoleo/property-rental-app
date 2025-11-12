@@ -16,8 +16,16 @@ class StayFactory extends Factory
      */
     public function definition(): array
     {
+        $startDate = fake()->dateTimeBetween('-1 year', '+6 months');
+        $endDate = fake()->dateTimeBetween($startDate, '+1 year');
+        
         return [
-            //
+            'accommodation_id' => \App\Models\Accommodation::factory(),
+            'stay_category_id' => \App\Models\StayCategory::factory(),
+            'price' => fake()->randomFloat(2, 500, 5000),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'due_date' => fake()->optional()->dateTimeBetween($startDate, $endDate),
         ];
     }
 }

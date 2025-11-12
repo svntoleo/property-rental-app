@@ -12,6 +12,10 @@ class StayCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $categories = ['Short-term', 'Long-term', 'Monthly', 'Seasonal', 'Student', 'Corporate'];
+        
+        foreach ($categories as $category) {
+            \App\Models\StayCategory::create(['label' => $category]);
+        }
     }
 }
