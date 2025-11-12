@@ -33,7 +33,7 @@ interface Expense {
     description: string | null;
     property: Property;
     accommodation: Accommodation | null;
-    expense_category: ExpenseCategory;
+    category: ExpenseCategory;
 }
 
 interface Props {
@@ -97,7 +97,7 @@ const formatCurrency = (value: number) => {
                         <div>
                             <p class="text-sm font-medium">Category</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ expense.expense_category.label }}
+                                {{ expense.category.label }}
                             </p>
                         </div>
                         <div>

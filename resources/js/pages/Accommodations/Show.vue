@@ -25,8 +25,9 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
+    due_date: string;
     price: number;
-    stay_category: StayCategory;
+    category: StayCategory;
 }
 
 interface Accommodation {
@@ -135,7 +136,7 @@ const formatDate = (date: string) => {
                     <Card v-for="stay in accommodation.stays" :key="stay.id">
                         <CardHeader>
                             <CardTitle>{{
-                                stay.stay_category.label
+                                stay.category.label
                             }}</CardTitle>
                             <CardDescription>
                                 {{ formatDate(stay.start_date) }} -
@@ -143,6 +144,12 @@ const formatDate = (date: string) => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent class="space-y-2">
+                            <div>
+                                <p class="text-sm font-medium">Due Date</p>
+                                <p class="text-sm text-muted-foreground">
+                                    {{ formatDate(stay.due_date) }}
+                                </p>
+                            </div>
                             <div>
                                 <p class="text-sm font-medium">Price</p>
                                 <p class="text-lg font-semibold">

@@ -33,8 +33,9 @@ interface Stay {
     stay_category_id: number;
     start_date: string;
     end_date: string;
+    due_date: string;
     price: number;
-    stay_category: StayCategory;
+    category: StayCategory;
 }
 
 interface Props {
@@ -55,7 +56,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/stays',
     },
     {
-        title: props.stay.stay_category.label,
+        title: props.stay.category.label,
         href: `/stays/${props.stay.id}`,
     },
     {
@@ -69,6 +70,7 @@ const form = useForm({
     stay_category_id: props.stay.stay_category_id,
     start_date: props.stay.start_date,
     end_date: props.stay.end_date,
+    due_date: props.stay.due_date,
     price: props.stay.price,
 });
 
@@ -78,7 +80,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="`Edit ${stay.stay_category.label}`" />
+    <Head :title="`Edit ${stay.category.label}`" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
@@ -156,6 +158,16 @@ const submit = () => {
                                 type="date"
                             />
                             <InputError :message="form.errors.end_date" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="due_date">Due Date</Label>
+                            <Input
+                                id="due_date"
+                                v-model="form.due_date"
+                                type="date"
+                            />
+                            <InputError :message="form.errors.due_date" />
                         </div>
 
                         <div class="space-y-2">

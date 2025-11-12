@@ -33,7 +33,7 @@ interface Expense {
     description: string | null;
     property: Property;
     accommodation: Accommodation | null;
-    expense_category: ExpenseCategory;
+    category: ExpenseCategory;
 }
 
 interface PaginationLink {
@@ -104,7 +104,7 @@ const formatCurrency = (value: number) => {
                     <CardHeader>
                         <CardTitle>{{ expense.label }}</CardTitle>
                         <CardDescription>
-                            {{ expense.expense_category.label }}
+                            {{ expense.category.label }}
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-2">

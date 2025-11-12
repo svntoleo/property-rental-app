@@ -35,9 +35,10 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
+    due_date: string;
     price: number;
     accommodation: Accommodation;
-    stay_category: StayCategory;
+    category: StayCategory;
     tenants?: Tenant[];
 }
 
@@ -57,7 +58,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/stays',
     },
     {
-        title: props.stay.stay_category.label,
+        title: props.stay.category.label,
         href: `/stays/${props.stay.id}`,
     },
 ];
@@ -85,13 +86,13 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-    <Head :title="stay.stay_category.label" />
+    <Head :title="stay.category.label" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">
-                    {{ stay.stay_category.label }}
+                    {{ stay.category.label }}
                 </h1>
                 <div class="flex gap-2">
                     <Link :href="`/stays/${stay.id}/edit`">
@@ -127,9 +128,15 @@ const formatDate = (date: string) => {
                             </p>
                         </div>
                         <div>
+                            <p class="text-sm font-medium">Due Date</p>
+                            <p class="text-sm text-muted-foreground">
+                                {{ formatDate(stay.due_date) }}
+                            </p>
+                        </div>
+                        <div>
                             <p class="text-sm font-medium">Category</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ stay.stay_category.label }}
+                                {{ stay.category.label }}
                             </p>
                         </div>
                     </CardContent>

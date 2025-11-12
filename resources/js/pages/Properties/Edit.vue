@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
+import { computed } from 'vue';
 
 interface Property {
     id: number;
@@ -27,7 +28,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: 'Dashboard',
         href: '/dashboard',
@@ -44,7 +45,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: 'Edit',
         href: `/properties/${props.property.id}/edit`,
     },
-];
+]);
 
 const form = useForm({
     label: props.property.label,
@@ -112,9 +113,7 @@ const submit = () => {
                             <Button
                                 type="button"
                                 variant="outline"
-                                @click="
-                                    router.visit(`/properties/${property.id}`)
-                                "
+                                @click="router.visit(`/properties/${property.id}`)"
                                 >Cancel</Button
                             >
                         </div>

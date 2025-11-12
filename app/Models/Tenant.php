@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tenant extends Model
 {
-    /** @use HasFactory<\Database\Factories\TenantFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Mass-assignable attributes.
@@ -21,93 +21,96 @@ class Tenant extends Model
         'cpf',
     ];
 
-    /**
-     * Attributes to append to the model's array / JSON form.
-     */
-    protected $appends = [
-        'cpf_formatted',
-        'phone_formatted',
-    ];
-
     public function stay()
     {
         return $this->belongsTo(Stay::class);
     }
 
     /**
-     * Mutator: normalize CPF to digits-only before saving.
+     * Get the tenant's masked CPF.
      */
-    public function setCpfAttribute($value)
+    public function getMaskedCpfAttribute(): string
     {
-        $normalized = $value ? preg_replace('/\D/', '', (string) $value) : null;
-        $this->attributes['cpf'] = $normalized === '' ? null : $normalized;
+        if (! $this->cpf) {
+            return '';
+        }
+
+        // Mask CPF: 123.456.789-10 -> 123.***.**-10
+        return preg_replace('/(\d{3})\.\d{3}\.\d{2}(-\d{2})/', '$1.***.**$2', $this->cpf);
     }
 
     /**
-     * Mutator: normalize phone to digits-only before saving.
+     * Format CPF with mask: 12345678910 -> 123.456.789-10
      */
-    public function setPhoneAttribute($value)
+    public function getFormattedCpfAttribute(): string
     {
-        $normalized = $value ? preg_replace('/\D/', '', (string) $value) : null;
-        $this->attributes['phone'] = $normalized === '' ? null : $normalized;
+        if (! $this->cpf) {
+            return '';
+        }
+
+        // Remove any non-digit characters first
+        $cpf = preg_replace('/\D/', '', $this->cpf);
+
+        // Apply mask
+        return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf);
     }
 
     /**
-     * Accessor: formatted CPF (000.000.000-00) or null.
+     * Set CPF attribute, removing any formatting.
      */
-    public function getCpfFormattedAttribute()
+    public function setCpfAttribute($value): void
     {
-        $cpf = $this->attributes['cpf'] ?? null;
-        if (empty($cpf) || strlen($cpf) !== 11) {
-            return null;
-        }
-        return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+        // Store CPF without formatting
+        $this->attributes['cpf'] = preg_replace('/\D/', '', $value);
     }
 
     /**
-     * Accessor: formatted phone number for Brazilian formats.
-     * Examples:
-     * - 11912345678 -> (11) 91234-5678
-     * - 1123456789  -> (11) 2345-6789
-     * - 912345678   -> 91234-5678
+     * Scope a query to search by name, email, or CPF.
      */
-    public function getPhoneFormattedAttribute()
+    public function scopeSearch($query, $search)
     {
-        $phone = $this->attributes['phone'] ?? null;
-        if (empty($phone)) {
-            return null;
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('cpf', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * Scope a query to only include tenants with active stays.
+     */
+    public function scopeWithActiveStays($query)
+    {
+        return $query->whereHas('stay', function ($q) {
+            $q->where('end_date', '>=', now());
+        });
+    }
+
+    /**
+     * Get tenant's full accommodation information through stay.
+     */
+    public function getAccommodationAttribute()
+    {
+        return $this->stay?->accommodation;
+    }
+
+    /**
+     * Get tenant's property information through stay and accommodation.
+     */
+    public function getPropertyAttribute()
+    {
+        return $this->stay?->accommodation?->property;
+    }
+
+    /**
+     * Check if tenant's stay is currently active.
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        if (! $this->stay) {
+            return false;
         }
 
-        $digits = preg_replace('/\D/', '', $phone);
-
-        // Remove leading country code 55 if present
-        if (strlen($digits) > 11 && substr($digits, 0, 2) === '55') {
-            $digits = substr($digits, 2);
-        }
-
-        $len = strlen($digits);
-
-        if ($len === 11) {
-            // (AA) 9XXXX-XXXX
-            return '(' . substr($digits, 0, 2) . ') ' . substr($digits, 2, 5) . '-' . substr($digits, 7, 4);
-        }
-
-        if ($len === 10) {
-            // (AA) XXXX-XXXX
-            return '(' . substr($digits, 0, 2) . ') ' . substr($digits, 2, 4) . '-' . substr($digits, 6, 4);
-        }
-
-        if ($len === 9) {
-            // 9XXXX-XXXX (no area code)
-            return substr($digits, 0, 5) . '-' . substr($digits, 5, 4);
-        }
-
-        if ($len === 8) {
-            // XXXX-XXXX
-            return substr($digits, 0, 4) . '-' . substr($digits, 4, 4);
-        }
-
-        // Fallback: return digits as-is
-        return $digits;
+        return $this->stay->end_date >= now();
     }
 }

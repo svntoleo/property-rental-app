@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { computed } from 'vue';
 import {
     Card,
     CardContent,
@@ -26,7 +27,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: 'Dashboard',
         href: '/dashboard',
@@ -39,7 +40,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         title: props.property.label,
         href: `/properties/${props.property.id}`,
     },
-];
+]);
 
 const deleteProperty = () => {
     if (confirm('Are you sure you want to delete this property?')) {
@@ -107,7 +108,7 @@ const deleteProperty = () => {
                 </Card>
             </div>
 
-            <div v-if="property.accommodations?.length" class="grid gap-4">
+            <div v-if="property.accommodations && property.accommodations.length > 0" class="grid gap-4">
                 <h2 class="text-xl font-semibold">Accommodations</h2>
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Card

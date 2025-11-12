@@ -29,9 +29,10 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
+    due_date: string;
     price: number;
+    category: StayCategory;
     accommodation: Accommodation;
-    stay_category: StayCategory;
 }
 
 interface PaginationLink {
@@ -108,7 +109,7 @@ const formatDate = (date: string) => {
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card v-for="stay in stays.data" :key="stay.id">
                     <CardHeader>
-                        <CardTitle>{{ stay.stay_category.label }}</CardTitle>
+                        <CardTitle>{{ stay.category.label }}</CardTitle>
                         <CardDescription>
                             {{ stay.accommodation.property.label }} -
                             {{ stay.accommodation.label }}
@@ -120,6 +121,12 @@ const formatDate = (date: string) => {
                             <p class="text-sm text-muted-foreground">
                                 {{ formatDate(stay.start_date) }} -
                                 {{ formatDate(stay.end_date) }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Due Date</p>
+                            <p class="text-sm text-muted-foreground">
+                                {{ formatDate(stay.due_date) }}
                             </p>
                         </div>
                         <div>

@@ -14,8 +14,11 @@ class PropertyResource extends JsonResource
             'label' => $this->label,
             'address' => $this->address,
             'description' => $this->description,
-            'accommodations' => AccommodationResource::collection($this->whenLoaded('accommodations')),
-            'expenses' => ExpenseResource::collection($this->whenLoaded('expenses')),
+            // Always include arrays to avoid undefined on the frontend
+            'accommodations' => AccommodationResource::collection($this->relationLoaded('accommodations') ? $this->accommodations : collect()),
+            'expenses' => ExpenseResource::collection($this->relationLoaded('expenses') ? $this->expenses : collect()),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

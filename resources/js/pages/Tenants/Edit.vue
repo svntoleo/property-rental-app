@@ -24,7 +24,7 @@ interface Stay {
             label: string;
         };
     };
-    stay_category: {
+    category: {
         label: string;
     };
 }

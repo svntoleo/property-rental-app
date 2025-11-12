@@ -15,6 +15,7 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
+    due_date: string;
     price: number;
     accommodation: {
         id: number;
@@ -24,7 +25,7 @@ interface Stay {
             label: string;
         };
     };
-    stay_category: {
+    category: {
         label: string;
     };
 }
@@ -161,7 +162,7 @@ const formatPhone = (phone: string) => {
                         <div>
                             <p class="text-sm font-medium">Category</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ tenant.stay.stay_category.label }}
+                                {{ tenant.stay.category.label }}
                             </p>
                         </div>
                         <div>
@@ -169,6 +170,12 @@ const formatPhone = (phone: string) => {
                             <p class="text-sm text-muted-foreground">
                                 {{ formatDate(tenant.stay.start_date) }} -
                                 {{ formatDate(tenant.stay.end_date) }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Due Date</p>
+                            <p class="text-sm text-muted-foreground">
+                                {{ formatDate(tenant.stay.due_date) }}
                             </p>
                         </div>
                         <div>

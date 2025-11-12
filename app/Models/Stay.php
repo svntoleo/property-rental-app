@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Stay extends Model
 {
-    /** @use HasFactory<\Database\Factories\StayFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Mass-assignable attributes.
@@ -17,26 +17,26 @@ class Stay extends Model
     protected $fillable = [
         'accommodation_id',
         'stay_category_id',
-        'price',
         'start_date',
         'end_date',
         'due_date',
+        'price'
     ];
 
     /**
-     * Cast date fields to Carbon instances and price to decimal.
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'due_date' => 'date',
-        'price' => 'decimal:2',
-    ];
-
-    /**
-     * Append the computed `active` attribute when serializing.
-     */
-    protected $appends = ['active'];
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'due_date' => 'date',
+            'price' => 'decimal:2',
+        ];
+    }
 
     public function accommodation()
     {
@@ -45,39 +45,37 @@ class Stay extends Model
 
     public function category()
     {
-        return $this->belongsTo(StayCategory::class);
+        return $this->belongsTo(StayCategory::class, 'stay_category_id');
     }
 
-    public function tenants() {
+    public function tenants()
+    {
         return $this->hasMany(Tenant::class);
     }
 
     /**
-     * Computed attribute: whether the stay is active today.
-     * Returns boolean.
+     * Get the number of days for this stay.
      */
-    public function getActiveAttribute(): bool
+    public function getDaysAttribute(): int
     {
-        if (is_null($this->start_date) || is_null($this->end_date)) {
-            return false;
-        }
-
-        $today = Carbon::today();
-
-        // Carbon::between accepts two DateTimes and is inclusive by default when third arg true
-        return $today->between($this->start_date, $this->end_date, true);
+        return Carbon::parse($this->start_date)->diffInDays(Carbon::parse($this->end_date));
     }
 
     /**
-     * Scope to filter only active stays.
-     * Use: Stay::active()->get();
+     * Get the price per day.
+     */
+    public function getPricePerDayAttribute(): float
+    {
+        $days = $this->days;
+
+        return $days > 0 ? $this->price / $days : 0;
+    }
+
+    /**
+     * Scope a query to only include active stays.
      */
     public function scopeActive($query)
     {
-        // Use application UTC date for consistent, testable comparisons.
-        $today = now()->utc()->toDateString();
-
-        return $query->whereDate('start_date', '<=', $today)
-                     ->whereDate('end_date', '>=', $today);
+        return $query->where('end_date', '>=', now());
     }
 }

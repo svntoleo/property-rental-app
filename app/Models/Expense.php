@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExpenseFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Mass-assignable attributes.
@@ -41,6 +41,6 @@ class Expense extends Model
 
     public function category()
     {
-        return $this->belongsTo(ExpenseCategory::class);
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
     }
 }
