@@ -77,6 +77,7 @@ class Stay extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('end_date', '>=', now());
+        return $query->where('start_date', '<=', now())
+                     ->where('end_date', '>=', now());
     }
 }

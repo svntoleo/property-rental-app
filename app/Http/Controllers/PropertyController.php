@@ -3,12 +3,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AccommodationResource;
 use App\Http\Resources\ExpenseResource;
+use App\Http\Resources\StayResource;
 use App\Http\Resources\TenantResource;
 
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Resources\PropertyResource;
 use App\Models\Property;
+use App\Models\Stay;
 use App\Models\Tenant;
 use Inertia\Inertia;
 
@@ -103,7 +105,7 @@ class PropertyController extends Controller
                 });
             })
             ->orderBy($expenseSortBy, $expenseSortDir)
-            ->paginate(10)
+            ->paginate(10, ['*'], 'expense_page')
             ->appends([
                 'expense_search' => $expenseSearch,
                 'expense_sort_by' => $expenseSortBy,
@@ -122,11 +124,41 @@ class PropertyController extends Controller
                 $query->where('label', 'like', "%{$accommodationSearch}%");
             })
             ->orderBy($accommodationSortBy, $accommodationSortDir)
-            ->paginate(10)
+            ->paginate(10, ['*'], 'accommodation_page')
             ->appends([
                 'accommodation_search' => $accommodationSearch,
                 'accommodation_sort_by' => $accommodationSortBy,
                 'accommodation_sort_dir' => $accommodationSortDir,
+            ]);
+
+        // Active stays search and sorting
+        $staySearch = request('stay_search');
+        $staySortBy = request('stay_sort_by', 'start_date');
+        $staySortDir = request('stay_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
+        $allowedStaySorts = ['start_date', 'end_date', 'price'];
+        $staySortBy = in_array($staySortBy, $allowedStaySorts) ? $staySortBy : 'start_date';
+
+        $stays = Stay::with(['accommodation', 'category', 'tenants'])
+            ->whereHas('accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->active()
+            ->when(!empty($staySearch), function ($query) use ($staySearch) {
+                $query->where(function ($q) use ($staySearch) {
+                    $q->whereHas('category', function ($catQuery) use ($staySearch) {
+                        $catQuery->where('label', 'like', "%{$staySearch}%");
+                    })
+                    ->orWhere('start_date', 'like', "%{$staySearch}%")
+                    ->orWhere('end_date', 'like', "%{$staySearch}%")
+                    ->orWhere('price', 'like', "%{$staySearch}%");
+                });
+            })
+            ->orderBy($staySortBy, $staySortDir)
+            ->paginate(10, ['*'], 'stay_page')
+            ->appends([
+                'stay_search' => $staySearch,
+                'stay_sort_by' => $staySortBy,
+                'stay_sort_dir' => $staySortDir,
             ]);
 
         // Tenants search and sorting
@@ -149,7 +181,7 @@ class PropertyController extends Controller
                 });
             })
             ->orderBy($tenantSortBy, $tenantSortDir)
-            ->paginate(10)
+            ->paginate(10, ['*'], 'tenant_page')
             ->appends([
                 'tenant_search' => $tenantSearch,
                 'tenant_sort_by' => $tenantSortBy,
@@ -166,6 +198,10 @@ class PropertyController extends Controller
             'accommodation_search' => $accommodationSearch ?? '',
             'accommodation_sort_by' => $accommodationSortBy,
             'accommodation_sort_dir' => $accommodationSortDir,
+            'stays' => StayResource::collection($stays),
+            'stay_search' => $staySearch ?? '',
+            'stay_sort_by' => $staySortBy,
+            'stay_sort_dir' => $staySortDir,
             'tenants' => TenantResource::collection($tenants),
             'tenant_search' => $tenantSearch ?? '',
             'tenant_sort_by' => $tenantSortBy,

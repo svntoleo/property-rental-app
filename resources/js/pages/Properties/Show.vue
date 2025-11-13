@@ -61,6 +61,23 @@ interface Tenant {
     };
 }
 
+interface Stay {
+    id: number;
+    start_date: string;
+    end_date: string;
+    due_date: number;
+    price: number;
+    accommodation: {
+        id: number;
+        label: string;
+    };
+    category: {
+        id: number;
+        label: string;
+    };
+    tenants: Tenant[];
+}
+
 interface PaginationLink {
     url: string | null;
     label: string;
@@ -94,6 +111,13 @@ interface Props {
     accommodation_search: string;
     accommodation_sort_by?: string;
     accommodation_sort_dir?: 'asc' | 'desc';
+    stays: {
+        data: Stay[];
+        meta: PaginationMeta;
+    };
+    stay_search: string;
+    stay_sort_by?: string;
+    stay_sort_dir?: 'asc' | 'desc';
     tenants: {
         data: Tenant[];
         meta: PaginationMeta;
@@ -117,12 +141,26 @@ const expenseSortDir = ref(props.expense_sort_dir || 'desc');
 let expenseDebounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 function applyExpenseParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {};
-    if (expenseSearchQuery.value) params.expense_search = expenseSearchQuery.value;
-    params.expense_sort_by = expenseSortBy.value;
-    params.expense_sort_dir = expenseSortDir.value;
-    Object.assign(params, extra);
-    inertiaRouter.get(props.expenses.meta.path, params, { preserveScroll: true, preserveState: true });
+    const params: Record<string, any> = {
+        // Preserve accommodation params
+        accommodation_search: props.accommodation_search,
+        accommodation_sort_by: props.accommodation_sort_by,
+        accommodation_sort_dir: props.accommodation_sort_dir,
+        // Preserve stay params
+        stay_search: props.stay_search,
+        stay_sort_by: props.stay_sort_by,
+        stay_sort_dir: props.stay_sort_dir,
+        // Preserve tenant params
+        tenant_search: props.tenant_search,
+        tenant_sort_by: props.tenant_sort_by,
+        tenant_sort_dir: props.tenant_sort_dir,
+        // Set expense params
+        expense_search: expenseSearchQuery.value || undefined,
+        expense_sort_by: expenseSortBy.value,
+        expense_sort_dir: expenseSortDir.value,
+        ...extra,
+    };
+    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
 }
 
 function toggleExpenseSort(column: string) {
@@ -150,12 +188,26 @@ const accommodationSortDir = ref(props.accommodation_sort_dir || 'asc');
 let accommodationDebounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 function applyAccommodationParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {};
-    if (accommodationSearchQuery.value) params.accommodation_search = accommodationSearchQuery.value;
-    params.accommodation_sort_by = accommodationSortBy.value;
-    params.accommodation_sort_dir = accommodationSortDir.value;
-    Object.assign(params, extra);
-    inertiaRouter.get(props.accommodations.meta.path, params, { preserveScroll: true, preserveState: true });
+    const params: Record<string, any> = {
+        // Preserve expense params
+        expense_search: props.expense_search,
+        expense_sort_by: props.expense_sort_by,
+        expense_sort_dir: props.expense_sort_dir,
+        // Preserve stay params
+        stay_search: props.stay_search,
+        stay_sort_by: props.stay_sort_by,
+        stay_sort_dir: props.stay_sort_dir,
+        // Preserve tenant params
+        tenant_search: props.tenant_search,
+        tenant_sort_by: props.tenant_sort_by,
+        tenant_sort_dir: props.tenant_sort_dir,
+        // Set accommodation params
+        accommodation_search: accommodationSearchQuery.value || undefined,
+        accommodation_sort_by: accommodationSortBy.value,
+        accommodation_sort_dir: accommodationSortDir.value,
+        ...extra,
+    };
+    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
 }
 
 function toggleAccommodationSort(column: string) {
@@ -175,6 +227,53 @@ watch(accommodationSearchQuery, () => {
     }, 350);
 });
 
+// Stays search and sorting
+const staySearchQuery = ref(props.stay_search || '');
+const staySortBy = ref(props.stay_sort_by || 'start_date');
+const staySortDir = ref(props.stay_sort_dir || 'desc');
+
+let stayDebounceHandle: ReturnType<typeof setTimeout> | undefined;
+
+function applyStayParams(extra: Record<string, any> = {}) {
+    const params: Record<string, any> = {
+        // Preserve expense params
+        expense_search: props.expense_search,
+        expense_sort_by: props.expense_sort_by,
+        expense_sort_dir: props.expense_sort_dir,
+        // Preserve accommodation params
+        accommodation_search: props.accommodation_search,
+        accommodation_sort_by: props.accommodation_sort_by,
+        accommodation_sort_dir: props.accommodation_sort_dir,
+        // Preserve tenant params
+        tenant_search: props.tenant_search,
+        tenant_sort_by: props.tenant_sort_by,
+        tenant_sort_dir: props.tenant_sort_dir,
+        // Set stay params
+        stay_search: staySearchQuery.value || undefined,
+        stay_sort_by: staySortBy.value,
+        stay_sort_dir: staySortDir.value,
+        ...extra,
+    };
+    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
+}
+
+function toggleStaySort(column: string) {
+    if (staySortBy.value === column) {
+        staySortDir.value = staySortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        staySortBy.value = column;
+        staySortDir.value = 'asc';
+    }
+    applyStayParams();
+}
+
+watch(staySearchQuery, () => {
+    if (stayDebounceHandle) clearTimeout(stayDebounceHandle);
+    stayDebounceHandle = setTimeout(() => {
+        applyStayParams();
+    }, 350);
+});
+
 // Tenants search and sorting
 const tenantSearchQuery = ref(props.tenant_search || '');
 const tenantSortBy = ref(props.tenant_sort_by || 'name');
@@ -183,12 +282,26 @@ const tenantSortDir = ref(props.tenant_sort_dir || 'asc');
 let tenantDebounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 function applyTenantParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {};
-    if (tenantSearchQuery.value) params.tenant_search = tenantSearchQuery.value;
-    params.tenant_sort_by = tenantSortBy.value;
-    params.tenant_sort_dir = tenantSortDir.value;
-    Object.assign(params, extra);
-    inertiaRouter.get(props.tenants.meta.path, params, { preserveScroll: true, preserveState: true });
+    const params: Record<string, any> = {
+        // Preserve expense params
+        expense_search: props.expense_search,
+        expense_sort_by: props.expense_sort_by,
+        expense_sort_dir: props.expense_sort_dir,
+        // Preserve accommodation params
+        accommodation_search: props.accommodation_search,
+        accommodation_sort_by: props.accommodation_sort_by,
+        accommodation_sort_dir: props.accommodation_sort_dir,
+        // Preserve stay params
+        stay_search: props.stay_search,
+        stay_sort_by: props.stay_sort_by,
+        stay_sort_dir: props.stay_sort_dir,
+        // Set tenant params
+        tenant_search: tenantSearchQuery.value || undefined,
+        tenant_sort_by: tenantSortBy.value,
+        tenant_sort_dir: tenantSortDir.value,
+        ...extra,
+    };
+    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
 }
 
 function toggleTenantSort(column: string) {
@@ -282,6 +395,12 @@ const deleteProperty = () => {
                             </p>
                         </div>
                         <div>
+                            <p class="text-sm font-medium">Active Stays</p>
+                            <p class="text-2xl font-bold">
+                                {{ stays.meta.total }}
+                            </p>
+                        </div>
+                        <div>
                             <p class="text-sm font-medium">Tenants</p>
                             <p class="text-2xl font-bold">
                                 {{ tenants.meta.total }}
@@ -351,10 +470,94 @@ const deleteProperty = () => {
                         v-for="(link, index) in accommodations.meta.links"
                         :key="index"
                         :href="link.url || '#'"
-                        :class="{
-                            'pointer-events-none': !link.url,
-                        }"
-                        @click.prevent="applyAccommodationParams({ page: link.label })"
+                        preserve-scroll
+                    >
+                        <Button
+                            :variant="link.active ? 'default' : 'outline'"
+                            size="sm"
+                            :disabled="!link.url"
+                            v-html="link.label"
+                        />
+                    </Link>
+                </div>
+            </div>
+
+            <div v-if="stays.data.length > 0" class="grid gap-4">
+                <h2 class="text-xl font-semibold">Active Stays</h2>
+                
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="staySearchQuery"
+                        placeholder="Search stays..."
+                        class="max-w-sm"
+                    />
+                </div>
+
+                <div class="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Accommodation</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleStaySort('start_date')">
+                                        Start Date
+                                        <span v-if="staySortBy === 'start_date'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleStaySort('end_date')">
+                                        End Date
+                                        <span v-if="staySortBy === 'end_date'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>Due Day</TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleStaySort('price')">
+                                        Price
+                                        <span v-if="staySortBy === 'price'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>Tenants</TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="stay in stays.data"
+                                :key="stay.id"
+                            >
+                                <TableCell class="font-medium">{{ stay.accommodation.label }}</TableCell>
+                                <TableCell>{{ stay.category.label }}</TableCell>
+                                <TableCell>{{ formatDate(stay.start_date) }}</TableCell>
+                                <TableCell>{{ formatDate(stay.end_date) }}</TableCell>
+                                <TableCell>{{ stay.due_date }}</TableCell>
+                                <TableCell>{{ formatCurrency(stay.price) }}</TableCell>
+                                <TableCell>{{ stay.tenants.length }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Link :href="`/stays/${stay.id}`">
+                                        <Button variant="outline" size="sm">View Details</Button>
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="stays.data.length === 0">
+                                <TableCell colspan="8" class="text-center">
+                                    No active stays found
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                <!-- Pagination -->
+                <div
+                    v-if="stays.meta.last_page > 1"
+                    class="mt-4 flex items-center justify-center gap-2"
+                >
+                    <Link
+                        v-for="(link, index) in stays.meta.links"
+                        :key="index"
+                        :href="link.url || '#'"
                         preserve-scroll
                     >
                         <Button
@@ -447,10 +650,6 @@ const deleteProperty = () => {
                         v-for="(link, index) in expenses.meta.links"
                         :key="index"
                         :href="link.url || '#'"
-                        :class="{
-                            'pointer-events-none': !link.url,
-                        }"
-                        @click.prevent="applyExpenseParams({ page: link.label })"
                         preserve-scroll
                     >
                         <Button
@@ -540,10 +739,6 @@ const deleteProperty = () => {
                         v-for="(link, index) in tenants.meta.links"
                         :key="index"
                         :href="link.url || '#'"
-                        :class="{
-                            'pointer-events-none': !link.url,
-                        }"
-                        @click.prevent="applyTenantParams({ page: link.label })"
                         preserve-scroll
                     >
                         <Button
