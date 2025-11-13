@@ -22,6 +22,7 @@ class ExpenseFactory extends Factory
             'expense_category_id' => \App\Models\ExpenseCategory::factory(),
             'label' => fake()->words(2, true),
             'price' => fake()->randomFloat(2, 50, 2000),
+            'date' => fake()->dateTimeBetween('-1 year', 'now'),
             'description' => fake()->optional()->sentence(),
         ];
     }

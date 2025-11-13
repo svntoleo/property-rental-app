@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatDate, formatCurrency } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ interface Expense {
     id: number;
     label: string;
     price: number;
+    date: string;
     description: string | null;
     property: Property;
     accommodation: Accommodation | null;
@@ -63,12 +65,7 @@ const deleteExpense = () => {
     }
 };
 
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+// using shared formatDate util
 </script>
 
 <template>
@@ -117,6 +114,12 @@ const formatCurrency = (value: number) => {
                             >
                                 {{ expense.accommodation.label }}
                             </Link>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Date</p>
+                            <p class="text-sm text-muted-foreground">
+                                {{ formatDate(expense.date) }}
+                            </p>
                         </div>
                         <div v-if="expense.description">
                             <p class="text-sm font-medium">Description</p>

@@ -5,6 +5,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatCurrency } from '@/lib/format';
 import {
     Table,
     TableBody,
@@ -195,13 +196,6 @@ const formatDate = (date: string | null | undefined) => {
         hour: '2-digit',
         minute: '2-digit',
     });
-};
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
 };
 </script>
 

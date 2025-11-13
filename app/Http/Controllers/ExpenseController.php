@@ -29,6 +29,7 @@ class ExpenseController extends Controller
             'label' => 'expenses.label',
             'description' => 'expenses.description',
             'price' => 'expenses.price',
+            'date' => 'expenses.date',
             'category' => 'expense_categories.label',
             'property' => 'properties.label',
             'accommodation' => 'accommodations.label',

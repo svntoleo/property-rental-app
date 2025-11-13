@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('expense_category_id')->constrained();
             $table->string('label', 255);
             $table->decimal('price', 10, 2);
+            $table->date('date');
             $table->text('description')->nullable();
             $table->timestamps();
         });

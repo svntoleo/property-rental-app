@@ -19,6 +19,7 @@ class ExpenseResource extends JsonResource
             'category' => new ExpenseCategoryResource($this->whenLoaded('category')),
             'label' => $this->label,
             'price' => $this->price,
+            'date' => $this->date?->format('Y-m-d'),
             'description' => $this->description,
             'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];

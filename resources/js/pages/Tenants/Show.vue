@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { formatCurrency, formatDate } from '@/lib/format';
 import {
     Card,
     CardContent,
@@ -64,21 +65,6 @@ const deleteTenant = () => {
     if (confirm('Are you sure you want to delete this tenant?')) {
         router.delete(`/tenants/${props.tenant.id}`);
     }
-};
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
 };
 
 const formatCPF = (cpf: string) => {

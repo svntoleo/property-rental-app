@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
+import { formatDate, formatCurrency } from '@/lib/format';
 import {
     Card,
     CardContent,
@@ -32,6 +33,7 @@ interface Expense {
     id: number;
     label: string;
     price: number;
+    date: string;
     description: string | null;
     category?: {
         id: number;
@@ -116,6 +118,8 @@ const deleteProperty = () => {
         router.delete(`/properties/${props.property.id}`);
     }
 };
+
+// using shared formatDate util
 </script>
 
 <template>
@@ -219,6 +223,12 @@ const deleteProperty = () => {
                                         </button>
                                     </TableHead>
                                     <TableHead>
+                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('date')">
+                                            Date
+                                            <span v-if="sortBy === 'date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('description')">
                                             Description
                                             <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -234,7 +244,8 @@ const deleteProperty = () => {
                                 >
                                     <TableCell>{{ expense.label }}</TableCell>
                                     <TableCell>{{ expense.category?.label || 'N/A' }}</TableCell>
-                                    <TableCell>${{ expense.price }}</TableCell>
+                                    <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
+                                    <TableCell>{{ formatDate(expense.date) }}</TableCell>
                                     <TableCell>{{ expense.description || '-' }}</TableCell>
                                     <TableCell>
                                         <Link :href="`/expenses/${expense.id}`">

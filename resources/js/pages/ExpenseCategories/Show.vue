@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/format';
 import {
     Card,
     CardContent,
@@ -65,13 +66,6 @@ const deleteCategory = () => {
     if (confirm('Are you sure you want to delete this category?')) {
         router.delete(`/expense-categories/${props.category.id}`);
     }
-};
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
 };
 </script>
 

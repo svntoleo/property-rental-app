@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatDate, formatCurrency } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
@@ -14,29 +15,24 @@ import {
 } from '@/components/ui/table';
 import { ref, watch } from 'vue';
 
-interface Property {
-    id: number;
-    label: string;
-}
-
-interface Accommodation {
-    id: number;
-    label: string;
-}
-
-interface ExpenseCategory {
-    id: number;
-    label: string;
-}
-
 interface Expense {
     id: number;
     label: string;
     price: number;
+    date: string;
     description: string | null;
-    property: Property;
-    accommodation: Accommodation | null;
-    category: ExpenseCategory;
+    property: {
+        id: number;
+        label: string;
+    };
+    accommodation: {
+        id: number;
+        label: string;
+    } | null;
+    category: {
+        id: number;
+        label: string;
+    };
 }
 
 interface PaginationLink {
@@ -118,12 +114,7 @@ const deleteExpense = (id: number) => {
     }
 };
 
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+// using shared formatDate util
 </script>
 
 <template>
@@ -175,15 +166,21 @@ const formatCurrency = (value: number) => {
                                 </button>
                             </TableHead>
                             <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('description')">
-                                    Description
-                                    <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
                                 <button class="flex items-center gap-1" @click="toggleSort('price')">
                                     Price
                                     <span v-if="sortBy === 'price'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('date')">
+                                    Date
+                                    <span v-if="sortBy === 'date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('description')">
+                                    Description
+                                    <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
                                 </button>
                             </TableHead>
                             <TableHead class="text-right">Actions</TableHead>
@@ -202,10 +199,11 @@ const formatCurrency = (value: number) => {
                             <TableCell>{{
                                 expense.accommodation?.label || '-'
                             }}</TableCell>
+                            <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
+                            <TableCell>{{ formatDate(expense.date) }}</TableCell>
                             <TableCell>{{
                                 expense.description || '-'
                             }}</TableCell>
-                            <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
                                     <Link :href="`/expenses/${expense.id}`">
@@ -228,7 +226,7 @@ const formatCurrency = (value: number) => {
                             </TableCell>
                         </TableRow>
                         <TableRow v-if="expenses.data.length === 0">
-                            <TableCell colspan="7" class="text-center">
+                            <TableCell colspan="8" class="text-center">
                                 No expenses found
                             </TableCell>
                         </TableRow>

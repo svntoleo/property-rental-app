@@ -38,6 +38,7 @@ interface Expense {
     expense_category_id: number;
     label: string;
     price: number;
+    date: string;
     description: string | null;
 }
 
@@ -75,6 +76,7 @@ const form = useForm({
     expense_category_id: props.expense.expense_category_id,
     label: props.expense.label,
     price: props.expense.price,
+    date: props.expense.date,
     description: props.expense.description || '',
 });
 
@@ -193,6 +195,16 @@ const filteredAccommodations = computed(() => {
                                 placeholder="0.00"
                             />
                             <InputError :message="form.errors.price" />
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="date">Date</Label>
+                            <Input
+                                id="date"
+                                v-model="form.date"
+                                type="date"
+                            />
+                            <InputError :message="form.errors.date" />
                         </div>
 
                         <div class="space-y-2">

@@ -90,7 +90,7 @@ class PropertyController extends Controller
         // Sorting for expenses
         $sortBy = request('sort_by', 'label');
         $sortDir = request('sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
-        $allowedSorts = ['label', 'price', 'description'];
+    $allowedSorts = ['label', 'price', 'date', 'description'];
         $sortBy = in_array($sortBy, $allowedSorts) ? $sortBy : 'label';
 
         $expenses = $property->expenses()

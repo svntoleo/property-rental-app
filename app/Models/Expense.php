@@ -19,6 +19,7 @@ class Expense extends Model
         'expense_category_id',
         'label',
         'price',
+        'date',
         'description',
     ];
 
@@ -27,6 +28,7 @@ class Expense extends Model
      */
     protected $casts = [
         'price' => 'decimal:2',
+        'date' => 'date',
     ];
 
     public function property()
