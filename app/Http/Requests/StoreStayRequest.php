@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\NoOverlappingStays;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreStayRequest extends FormRequest
@@ -22,7 +23,16 @@ class StoreStayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'accommodation_id' => ['required', 'integer', 'exists:accommodations,id'],
+            'accommodation_id' => [
+                'required',
+                'integer',
+                'exists:accommodations,id',
+                new NoOverlappingStays(
+                    $this->input('accommodation_id'),
+                    $this->input('start_date'),
+                    $this->input('end_date')
+                ),
+            ],
             'stay_category_id' => ['required', 'integer', 'exists:stay_categories,id'],
             'price' => ['required', 'numeric', 'min:0'],
             'start_date' => ['required', 'date'],
