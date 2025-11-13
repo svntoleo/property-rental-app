@@ -12,9 +12,9 @@ class PropertyObserver
      */
     public function deleting(Property $property): void
     {
-        // When a property is soft-deleted, cascade to all children
+        // Cascade delete depending on operation type
         if ($property->isForceDeleting()) {
-            // If force deleting, let database handle cascade
+            // Let DB-level cascades handle hard deletes
             return;
         }
 

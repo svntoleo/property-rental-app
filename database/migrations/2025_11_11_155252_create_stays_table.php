@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('stays', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('accommodation_id')->nullable(false)->constrained();
+            $table->foreignId('accommodation_id')->nullable(false)->constrained()->cascadeOnDelete();
             $table->foreignId('stay_category_id')->nullable(false)->constrained();
             $table->decimal('price', 10, 2);
             $table->date('start_date');

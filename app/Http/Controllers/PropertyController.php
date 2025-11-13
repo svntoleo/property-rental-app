@@ -10,6 +10,7 @@ use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Resources\PropertyResource;
 use App\Models\Property;
+use App\Models\Expense;
 use App\Models\Stay;
 use App\Models\Tenant;
 use Inertia\Inertia;
@@ -188,6 +189,36 @@ class PropertyController extends Controller
                 'tenant_sort_dir' => $tenantSortDir,
             ]);
 
+        // Monthly financial stats for the property (current month)
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
+
+        $expectedIncome = Stay::whereHas('accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->where('start_date', '<=', $monthEnd)
+            ->where('end_date', '>=', $monthStart)
+            ->sum('price');
+
+        $expectedExpenses = Expense::where('property_id', $property->id)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->sum('price');
+
+        // Yearly financial stats for the property (current year)
+        $yearStart = now()->startOfYear();
+        $yearEnd = now()->endOfYear();
+
+        $expectedYearIncome = Stay::whereHas('accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->where('start_date', '<=', $yearEnd)
+            ->where('end_date', '>=', $yearStart)
+            ->sum('price');
+
+        $expectedYearExpenses = Expense::where('property_id', $property->id)
+            ->whereBetween('date', [$yearStart, $yearEnd])
+            ->sum('price');
+
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
             'expenses' => ExpenseResource::collection($expenses),
@@ -206,6 +237,14 @@ class PropertyController extends Controller
             'tenant_search' => $tenantSearch ?? '',
             'tenant_sort_by' => $tenantSortBy,
             'tenant_sort_dir' => $tenantSortDir,
+            // Monthly financial stats
+            'expected_month_income' => (float) $expectedIncome,
+            'expected_month_expenses' => (float) $expectedExpenses,
+            'expected_month_profit' => (float) ($expectedIncome - $expectedExpenses),
+            // Yearly financial stats
+            'expected_year_income' => (float) $expectedYearIncome,
+            'expected_year_expenses' => (float) $expectedYearExpenses,
+            'expected_year_profit' => (float) ($expectedYearIncome - $expectedYearExpenses),
         ]);
     }
 

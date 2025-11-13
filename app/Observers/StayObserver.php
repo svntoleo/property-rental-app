@@ -12,9 +12,9 @@ class StayObserver
      */
     public function deleting(Stay $stay): void
     {
-        // When a stay is soft-deleted, cascade to all tenants
+        // Cascade delete depending on operation type
         if ($stay->isForceDeleting()) {
-            // If force deleting, let database handle cascade
+            // Let DB-level cascades handle hard deletes
             return;
         }
 

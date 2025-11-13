@@ -127,6 +127,12 @@ interface Props {
     tenant_search: string;
     tenant_sort_by?: string;
     tenant_sort_dir?: 'asc' | 'desc';
+    expected_month_income: number;
+    expected_month_expenses: number;
+    expected_month_profit: number;
+    expected_year_income: number;
+    expected_year_expenses: number;
+    expected_year_profit: number;
 }
 
 
@@ -389,30 +395,82 @@ const deleteProperty = () => {
                     <CardHeader>
                         <CardTitle>Statistics</CardTitle>
                     </CardHeader>
-                    <CardContent class="space-y-2">
-                        <div>
-                            <p class="text-sm font-medium">Accommodations</p>
-                            <p class="text-2xl font-bold">
-                                {{ accommodations.meta.total }}
-                            </p>
+                    <CardContent class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium">Accommodations</p>
+                                <p class="text-2xl font-bold">
+                                    {{ accommodations.meta.total }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Active Stays</p>
+                                <p class="text-2xl font-bold">
+                                    {{ stays.meta.total }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Tenants</p>
+                                <p class="text-2xl font-bold">
+                                    {{ tenants.meta.total }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Expenses</p>
+                                <p class="text-2xl font-bold">
+                                    {{ expenses.meta.total }}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium">Active Stays</p>
-                            <p class="text-2xl font-bold">
-                                {{ stays.meta.total }}
+                        <div class="pt-2 border-t">
+                            <p class="text-xs text-muted-foreground mb-3">
+                                {{ new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) }}
                             </p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm font-medium">Expected Income</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_month_income) }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Expected Expenses</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_month_expenses) }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Expected Profit</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_month_profit) }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium">Tenants</p>
-                            <p class="text-2xl font-bold">
-                                {{ tenants.meta.total }}
+                        <div class="pt-4 border-t">
+                            <p class="text-xs text-muted-foreground mb-3">
+                                {{ new Date().getFullYear() }}
                             </p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium">Expenses</p>
-                            <p class="text-2xl font-bold">
-                                {{ expenses.meta.total }}
-                            </p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm font-medium">Expected Income</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_year_income) }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Expected Expenses</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_year_expenses) }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Expected Profit</p>
+                                    <p class="text-2xl font-bold">
+                                        {{ formatCurrency(props.expected_year_profit) }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

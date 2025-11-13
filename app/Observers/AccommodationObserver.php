@@ -12,9 +12,9 @@ class AccommodationObserver
      */
     public function deleting(Accommodation $accommodation): void
     {
-        // When an accommodation is soft-deleted, cascade to all children
+        // Cascade delete depending on operation type
         if ($accommodation->isForceDeleting()) {
-            // If force deleting, let database handle cascade
+            // Let DB-level cascades handle hard deletes
             return;
         }
 

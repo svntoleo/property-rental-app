@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_id')->nullable(false)->constrained();
-            $table->foreignId('accommodation_id')->constrained();
+            $table->foreignId('property_id')->nullable(false)->constrained()->cascadeOnDelete();
+            $table->foreignId('accommodation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('expense_category_id')->constrained();
             $table->string('label', 255);
             $table->decimal('price', 10, 2);
