@@ -51,7 +51,9 @@ interface Tenant {
     name: string;
     email: string;
     cpf: string;
+    cpf_formatted: string;
     phone: string;
+    phone_formatted: string;
     stay?: {
         id: number;
         accommodation: {
@@ -712,8 +714,8 @@ const deleteProperty = () => {
                             >
                                 <TableCell class="font-medium">{{ tenant.name }}</TableCell>
                                 <TableCell>{{ tenant.email }}</TableCell>
-                                <TableCell>{{ tenant.cpf }}</TableCell>
-                                <TableCell>{{ tenant.phone }}</TableCell>
+                                <TableCell>{{ tenant.cpf_formatted }}</TableCell>
+                                <TableCell>{{ tenant.phone_formatted }}</TableCell>
                                 <TableCell>{{ tenant.stay?.accommodation.label || '-' }}</TableCell>
                                 <TableCell class="text-right">
                                     <Link :href="`/tenants/${tenant.id}`">

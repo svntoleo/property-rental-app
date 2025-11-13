@@ -65,6 +65,30 @@ class Tenant extends Model
     }
 
     /**
+     * Format phone with mask: 11987654321 -> (11) 98765-4321
+     */
+    public function getPhoneFormattedAttribute(): string
+    {
+        if (! $this->phone) {
+            return '';
+        }
+
+        // Remove any non-digit characters first
+        $phone = preg_replace('/\D/', '', $this->phone);
+
+        // Apply mask based on length
+        // Mobile: (XX) 9XXXX-XXXX (11 digits)
+        // Landline: (XX) XXXX-XXXX (10 digits)
+        if (strlen($phone) === 11) {
+            return preg_replace('/(\d{2})(\d{5})(\d{4})/', '($1) $2-$3', $phone);
+        } elseif (strlen($phone) === 10) {
+            return preg_replace('/(\d{2})(\d{4})(\d{4})/', '($1) $2-$3', $phone);
+        }
+
+        return $phone; // Return as-is if unexpected format
+    }
+
+    /**
      * Scope a query to search by name, email, or CPF.
      */
     public function scopeSearch($query, $search)

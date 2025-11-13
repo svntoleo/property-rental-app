@@ -13,6 +13,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ref, watch } from 'vue';
+import { formatDate } from '@/lib/format';
 
 interface Stay {
     id: number;
@@ -31,6 +32,7 @@ interface Tenant {
     name: string;
     email: string;
     phone: string;
+    phone_formatted: string;
     cpf_formatted: string;
     stay: Stay;
 }
@@ -113,14 +115,6 @@ const deleteTenant = (id: number) => {
         router.delete(`/tenants/${id}`);
     }
 };
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
 </script>
 
 <template>
@@ -199,7 +193,7 @@ const formatDate = (date: string) => {
                             }}</TableCell>
                             <TableCell>{{ tenant.email }}</TableCell>
                             <TableCell>{{ tenant.cpf_formatted }}</TableCell>
-                            <TableCell>{{ tenant.phone }}</TableCell>
+                            <TableCell>{{ tenant.phone_formatted }}</TableCell>
                             <TableCell>
                                 {{ tenant.stay.accommodation.property.label }}
                             </TableCell>
