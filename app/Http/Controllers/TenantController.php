@@ -74,17 +74,7 @@ class TenantController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $stays = Stay::with(['accommodation.property', 'category'])->get();
-
-        return Inertia::render('Tenants/Create', [
-            'stays' => StayResource::collection($stays),
-        ]);
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -113,18 +103,7 @@ class TenantController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Tenant $tenant)
-    {
-        $stays = Stay::with(['accommodation.property', 'category'])->get();
-
-        return Inertia::render('Tenants/Edit', [
-            'tenant' => new TenantResource($tenant),
-            'stays' => StayResource::collection($stays),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

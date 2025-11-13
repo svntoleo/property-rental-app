@@ -95,19 +95,7 @@ class StayController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $accommodations = Accommodation::with('property')->get();
-        $categories = StayCategory::all();
-
-        return Inertia::render('Stays/Create', [
-            'accommodations' => AccommodationResource::collection($accommodations),
-            'categories' => StayCategoryResource::collection($categories),
-        ]);
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -137,21 +125,7 @@ class StayController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Stay $stay)
-    {
-        $stay->load('category');
-        $accommodations = Accommodation::with('property')->get();
-        $categories = StayCategory::all();
-
-        return Inertia::render('Stays/Edit', [
-            'stay' => new StayResource($stay),
-            'accommodations' => AccommodationResource::collection($accommodations),
-            'categories' => StayCategoryResource::collection($categories),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

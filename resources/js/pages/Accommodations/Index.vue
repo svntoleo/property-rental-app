@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,7 +16,6 @@ import { ref, watch, computed } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import AccommodationForm from '@/components/AccommodationForm.vue';
-import AccommodationView from '@/components/AccommodationView.vue';
 
 interface Property {
     id: number;
@@ -114,12 +113,6 @@ const deleteAccommodation = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<Accommodation>();
 
-const getModalTitle = () => {
-    if (mode.value === 'create') return 'Create Accommodation';
-    if (mode.value === 'edit') return 'Edit Accommodation';
-    return 'Accommodation Details';
-};
-
 // Transform accommodation for form (needs property_id instead of property object)
 const accommodationForForm = computed(() => {
     if (!entity.value) return undefined;
@@ -180,13 +173,14 @@ const accommodationForForm = computed(() => {
                             <TableCell>{{ accommodation.property.label }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('view', accommodation)"
-                                    >
-                                        View
-                                    </Button>
+                                    <Link :href="`/accommodations/${accommodation.id}`">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            View
+                                        </Button>
+                                    </Link>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -238,16 +232,15 @@ const accommodationForForm = computed(() => {
             </div>
         </div>
 
-        <!-- Unified Modal -->
-        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+        <!-- Unified Modal for Create/Edit -->
+        <ResourceDialog :open="isOpen" :title="mode === 'create' ? 'Create Accommodation' : 'Edit Accommodation'" @close="closeModal">
             <AccommodationForm
-                v-if="mode === 'create' || mode === 'edit'"
+                v-if="isOpen"
                 :accommodation="accommodationForForm"
                 :properties="properties"
                 :is-edit="mode === 'edit'"
                 @success="onSuccess"
             />
-            <AccommodationView v-else-if="mode === 'view'" :accommodation="entity!" />
         </ResourceDialog>
     </AppLayout>
 </template>

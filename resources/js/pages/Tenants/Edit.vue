@@ -1,12 +1,43 @@
 
 <script setup lang="ts">
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TenantForm from '@/components/TenantForm.vue';
 import { router } from '@inertiajs/vue3';
-const props = defineProps({ stays: Array, tenant: Object });
+
+// Match the shapes used by TenantForm to satisfy TypeScript
+interface Stay {
+  id: number;
+  accommodation: {
+    id: number;
+    label: string;
+    property: {
+      id: number;
+      label: string;
+    };
+  };
+  start_date: string;
+  end_date: string;
+}
+
+interface Tenant {
+  id: number;
+  stay_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  cpf: string;
+}
+
+const props = withDefaults(defineProps<{
+  stays: Stay[];
+  tenant?: Tenant;
+}>(), {
+  // These pages are legacy; provide safe defaults to avoid editor errors
+  stays: () => [] as Stay[],
+});
 
 function closeModal() {
-	window.history.length > 1 ? window.history.back() : router.visit('/tenants');
+  window.history.length > 1 ? window.history.back() : router.visit('/tenants');
 }
 </script>
 
@@ -16,7 +47,7 @@ function closeModal() {
       <DialogHeader>
         <DialogTitle>Edit Tenant</DialogTitle>
       </DialogHeader>
-      <TenantForm :stays="stays" :tenant="tenant" :isEdit="true" @success="closeModal" @cancel="closeModal" />
+  <TenantForm :stays="stays" :tenant="tenant" :isEdit="true" @success="closeModal" />
     </DialogContent>
   </Dialog>
 </template>

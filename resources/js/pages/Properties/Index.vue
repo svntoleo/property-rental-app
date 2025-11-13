@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PropertyForm from '@/components/PropertyForm.vue';
-import PropertyView from '@/components/PropertyView.vue';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import { Button } from '@/components/ui/button';
@@ -178,7 +177,9 @@ const deleteProperty = (id: number) => {
                             }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Button variant="outline" size="sm" @click="openModal('view', property)">View</Button>
+                                    <Link :href="`/properties/${property.id}`">
+                                        <Button variant="outline" size="sm">View</Button>
+                                    </Link>
                                     <Button variant="outline" size="sm" @click="openModal('edit', property)">Edit</Button>
                                     <Button
                                         variant="destructive"
@@ -226,25 +227,18 @@ const deleteProperty = (id: number) => {
             </div>
         </div>
 
-        <!-- Unified Modal for Create/Edit/View Property -->
+        <!-- Unified Modal for Create/Edit Property -->
         <ResourceDialog
             :open="isOpen"
-            :title="mode === 'create' ? 'Create Property' : mode === 'edit' ? 'Edit Property' : 'Property Details'"
+            :title="mode === 'create' ? 'Create Property' : 'Edit Property'"
             @close="closeModal"
         >
-            <!-- Form for Create/Edit -->
             <PropertyForm
-                v-if="isOpen && (mode === 'create' || mode === 'edit')"
+                v-if="isOpen"
                 :property="(entity as any) || undefined"
                 :isEdit="mode === 'edit'"
                 @success="handleSuccess"
                 @cancel="closeModal"
-            />
-
-            <!-- View content -->
-            <PropertyView
-                v-if="isOpen && mode === 'view' && entity"
-                :property="entity as any"
             />
         </ResourceDialog>
     </AppLayout>

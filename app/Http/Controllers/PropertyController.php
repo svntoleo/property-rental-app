@@ -62,13 +62,7 @@ class PropertyController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('Properties/Create');
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -248,15 +242,7 @@ class PropertyController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Property $property)
-    {
-        return Inertia::render('Properties/Edit', [
-            'property' => new PropertyResource($property),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

@@ -65,17 +65,7 @@ class AccommodationController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $properties = Property::select('id', 'label', 'address')->get();
-
-        return Inertia::render('Accommodations/Create', [
-            'properties' => PropertyResource::collection($properties),
-        ]);
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -106,18 +96,7 @@ class AccommodationController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Accommodation $accommodation)
-    {
-        $properties = Property::select('id', 'label', 'address')->get();
-
-        return Inertia::render('Accommodations/Edit', [
-            'accommodation' => new AccommodationResource($accommodation),
-            'properties' => PropertyResource::collection($properties),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

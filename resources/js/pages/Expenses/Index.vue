@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,7 +17,6 @@ import { ref, watch, computed } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import ExpenseForm from '@/components/ExpenseForm.vue';
-import ExpenseView from '@/components/ExpenseView.vue';
 
 interface Property {
     id: number;
@@ -141,13 +140,7 @@ const deleteExpense = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<Expense>();
 
-const getModalTitle = () => {
-    if (mode.value === 'create') return 'Create Expense';
-    if (mode.value === 'edit') return 'Edit Expense';
-    return 'Expense Details';
-};
-
-// Transform expense for form/view (accommodation: null -> undefined)
+// Transform expense for form (accommodation: null -> undefined)
 const expenseForModal = computed(() => {
     if (!entity.value) return undefined;
     return {
@@ -245,13 +238,14 @@ const expenseForModal = computed(() => {
                             }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('view', expense)"
-                                    >
-                                        View
-                                    </Button>
+                                    <Link :href="`/expenses/${expense.id}`">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            View
+                                        </Button>
+                                    </Link>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -303,10 +297,10 @@ const expenseForModal = computed(() => {
             </div>
         </div>
 
-        <!-- Unified Modal -->
-        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+        <!-- Unified Modal for Create/Edit -->
+        <ResourceDialog :open="isOpen" :title="mode === 'create' ? 'Create Expense' : 'Edit Expense'" @close="closeModal">
             <ExpenseForm
-                v-if="mode === 'create' || mode === 'edit'"
+                v-if="isOpen"
                 :expense="expenseForModal"
                 :properties="properties"
                 :accommodations="accommodations"
@@ -314,7 +308,6 @@ const expenseForModal = computed(() => {
                 :is-edit="mode === 'edit'"
                 @success="onSuccess"
             />
-            <ExpenseView v-else-if="mode === 'view'" :expense="expenseForModal!" />
         </ResourceDialog>
     </AppLayout>
 </template>

@@ -87,21 +87,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $properties = Property::select('id', 'label', 'address')->get();
-        $accommodations = Accommodation::with('property')->get();
-        $categories = ExpenseCategory::all();
-
-        return Inertia::render('Expenses/Create', [
-            'properties' => PropertyResource::collection($properties),
-            'accommodations' => AccommodationResource::collection($accommodations),
-            'categories' => ExpenseCategoryResource::collection($categories),
-        ]);
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -127,22 +113,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Expense $expense)
-    {
-        $properties = Property::select('id', 'label', 'address')->get();
-        $accommodations = Accommodation::with('property')->get();
-        $categories = ExpenseCategory::all();
-
-        return Inertia::render('Expenses/Edit', [
-            'expense' => new ExpenseResource($expense),
-            'properties' => PropertyResource::collection($properties),
-            'accommodations' => AccommodationResource::collection($accommodations),
-            'categories' => ExpenseCategoryResource::collection($categories),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

@@ -22,13 +22,13 @@ Route::get('dashboard', function () {
 
 // Resource routes for property rental management
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('properties', PropertyController::class);
-    Route::resource('accommodations', AccommodationController::class);
-    Route::resource('stays', StayController::class);
-    Route::resource('tenants', TenantController::class);
-    Route::resource('expenses', ExpenseController::class);
-    Route::resource('stay-categories', StayCategoryController::class);
-    Route::resource('expense-categories', ExpenseCategoryController::class);
+    Route::resource('properties', PropertyController::class)->except(['create', 'edit']);
+    Route::resource('accommodations', AccommodationController::class)->except(['create', 'edit']);
+    Route::resource('stays', StayController::class)->except(['create', 'edit']);
+    Route::resource('tenants', TenantController::class)->except(['create', 'edit']);
+    Route::resource('expenses', ExpenseController::class)->except(['create', 'edit']);
+    Route::resource('stay-categories', StayCategoryController::class)->except(['create', 'edit']);
+    Route::resource('expense-categories', ExpenseCategoryController::class)->except(['create', 'edit']);
 
     // Trash management routes
     Route::get('trash', [TrashController::class, 'index'])->name('trash.index');

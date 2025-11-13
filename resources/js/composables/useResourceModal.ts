@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
 
-export type ModalMode = 'create' | 'edit' | 'view';
+export type ModalMode = 'create' | 'edit';
 
 export function useResourceModal<T = Record<string, any>>() {
   const isOpen = ref(false);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -17,7 +17,6 @@ import { ref, watch } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import StayForm from '@/components/StayForm.vue';
-import StayView from '@/components/StayView.vue';
 
 interface Accommodation {
     id: number;
@@ -128,12 +127,6 @@ const deleteStay = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<Stay>();
 
-const getModalTitle = () => {
-    if (mode.value === 'create') return 'Create Stay';
-    if (mode.value === 'edit') return 'Edit Stay';
-    return 'Stay Details';
-};
-
 </script>
 
 <template>
@@ -218,13 +211,14 @@ const getModalTitle = () => {
                             <TableCell>{{ formatCurrency(stay.price) }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('view', stay)"
-                                    >
-                                        View
-                                    </Button>
+                                    <Link :href="`/stays/${stay.id}`">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            View
+                                        </Button>
+                                    </Link>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -276,17 +270,16 @@ const getModalTitle = () => {
             </div>
         </div>
 
-        <!-- Unified Modal -->
-        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+        <!-- Unified Modal for Create/Edit -->
+        <ResourceDialog :open="isOpen" :title="mode === 'create' ? 'Create Stay' : 'Edit Stay'" @close="closeModal">
             <StayForm
-                v-if="mode === 'create' || mode === 'edit'"
+                v-if="isOpen"
                 :stay="entity ?? undefined"
                 :accommodations="accommodations"
                 :stay-categories="stayCategories"
                 :is-edit="mode === 'edit'"
                 @success="onSuccess"
             />
-            <StayView v-else-if="mode === 'view'" :stay="entity!" />
         </ResourceDialog>
     </AppLayout>
 </template>

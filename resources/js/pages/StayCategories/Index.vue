@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,7 +13,6 @@ import {
 import { useResourceModal } from '@/composables/useResourceModal';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import StayCategoryForm from '@/components/StayCategoryForm.vue';
-import StayCategoryView from '@/components/StayCategoryView.vue';
 
 interface StayCategory {
     id: number;
@@ -68,12 +67,6 @@ const deleteCategory = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<StayCategory>();
 
-const getModalTitle = () => {
-    if (mode.value === 'create') return 'Create Stay Category';
-    if (mode.value === 'edit') return 'Edit Stay Category';
-    return 'Stay Category Details';
-};
-
 </script>
 
 <template>
@@ -100,13 +93,14 @@ const getModalTitle = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            @click="openModal('view', category)"
-                        >
-                            View
-                        </Button>
+                        <Link :href="`/stay-categories/${category.id}`">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                            >
+                                View
+                            </Button>
+                        </Link>
                         <Button
                             variant="outline"
                             size="sm"
@@ -141,15 +135,14 @@ const getModalTitle = () => {
             </div>
         </div>
 
-        <!-- Unified Modal -->
-        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+        <!-- Unified Modal for Create/Edit -->
+        <ResourceDialog :open="isOpen" :title="mode === 'create' ? 'Create Stay Category' : 'Edit Stay Category'" @close="closeModal">
             <StayCategoryForm
-                v-if="mode === 'create' || mode === 'edit'"
+                v-if="isOpen"
                 :stay-category="entity ?? undefined"
                 :is-edit="mode === 'edit'"
                 @success="onSuccess"
             />
-            <StayCategoryView v-else-if="mode === 'view'" :stay-category="entity!" />
         </ResourceDialog>
     </AppLayout>
 </template>

@@ -24,13 +24,7 @@ class StayCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('StayCategories/Create');
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -56,15 +50,7 @@ class StayCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(StayCategory $stayCategory)
-    {
-        return Inertia::render('StayCategories/Edit', [
-            'category' => new StayCategoryResource($stayCategory),
-        ]);
-    }
+    
 
     /**
      * Update the specified resource in storage.

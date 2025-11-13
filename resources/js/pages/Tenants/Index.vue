@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import TenantForm from '@/components/TenantForm.vue';
-import TenantView from '@/components/TenantView.vue';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import { Button } from '@/components/ui/button';
@@ -229,7 +228,9 @@ const deleteTenant = (id: number) => {
                             </TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Button variant="outline" size="sm" @click="openModal('view', tenant)">View</Button>
+                                    <Link :href="`/tenants/${tenant.id}`">
+                                        <Button variant="outline" size="sm">View</Button>
+                                    </Link>
                                     <Button variant="outline" size="sm" @click="openModal('edit', tenant)">Edit</Button>
                                     <Button
                                         variant="destructive"
@@ -277,26 +278,19 @@ const deleteTenant = (id: number) => {
             </div>
         </div>
 
-        <!-- Unified Modal for Create/Edit/View Tenant -->
+        <!-- Unified Modal for Create/Edit Tenant -->
         <ResourceDialog
             :open="isOpen"
-            :title="mode === 'create' ? 'Create Tenant' : mode === 'edit' ? 'Edit Tenant' : 'Tenant Details'"
+            :title="mode === 'create' ? 'Create Tenant' : 'Edit Tenant'"
             @close="closeModal"
         >
-            <!-- Form for Create/Edit -->
             <TenantForm
-                v-if="isOpen && (mode === 'create' || mode === 'edit')"
+                v-if="isOpen"
                 :stays="stays"
                 :tenant="(entity as any) || undefined"
                 :isEdit="mode === 'edit'"
                 @success="handleSuccess"
                 @cancel="closeModal"
-            />
-
-            <!-- View content -->
-            <TenantView
-                v-if="isOpen && mode === 'view' && entity"
-                :tenant="entity as any"
             />
         </ResourceDialog>
     </AppLayout>
