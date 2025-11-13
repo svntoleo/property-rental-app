@@ -61,7 +61,8 @@ class ExpenseController extends Controller
                 $query->orderBy($allowedSorts[$sortBy], $sortDir);
             }
         } else {
-            $query->latest();
+            // Default: order by date descending (latest first)
+            $query->orderBy('expenses.date', 'desc')->orderBy('expenses.created_at', 'desc');
         }
 
         $expenses = $query->paginate(15)->appends([
