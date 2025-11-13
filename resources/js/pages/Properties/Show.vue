@@ -46,6 +46,21 @@ interface Expense {
     };
 }
 
+interface Tenant {
+    id: number;
+    name: string;
+    email: string;
+    cpf: string;
+    phone: string;
+    stay?: {
+        id: number;
+        accommodation: {
+            id: number;
+            label: string;
+        };
+    };
+}
+
 interface PaginationLink {
     url: string | null;
     label: string;
@@ -79,6 +94,13 @@ interface Props {
     accommodation_search: string;
     accommodation_sort_by?: string;
     accommodation_sort_dir?: 'asc' | 'desc';
+    tenants: {
+        data: Tenant[];
+        meta: PaginationMeta;
+    };
+    tenant_search: string;
+    tenant_sort_by?: string;
+    tenant_sort_dir?: 'asc' | 'desc';
 }
 
 
@@ -153,6 +175,39 @@ watch(accommodationSearchQuery, () => {
     }, 350);
 });
 
+// Tenants search and sorting
+const tenantSearchQuery = ref(props.tenant_search || '');
+const tenantSortBy = ref(props.tenant_sort_by || 'name');
+const tenantSortDir = ref(props.tenant_sort_dir || 'asc');
+
+let tenantDebounceHandle: ReturnType<typeof setTimeout> | undefined;
+
+function applyTenantParams(extra: Record<string, any> = {}) {
+    const params: Record<string, any> = {};
+    if (tenantSearchQuery.value) params.tenant_search = tenantSearchQuery.value;
+    params.tenant_sort_by = tenantSortBy.value;
+    params.tenant_sort_dir = tenantSortDir.value;
+    Object.assign(params, extra);
+    inertiaRouter.get(props.tenants.meta.path, params, { preserveScroll: true, preserveState: true });
+}
+
+function toggleTenantSort(column: string) {
+    if (tenantSortBy.value === column) {
+        tenantSortDir.value = tenantSortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        tenantSortBy.value = column;
+        tenantSortDir.value = 'asc';
+    }
+    applyTenantParams();
+}
+
+watch(tenantSearchQuery, () => {
+    if (tenantDebounceHandle) clearTimeout(tenantDebounceHandle);
+    tenantDebounceHandle = setTimeout(() => {
+        applyTenantParams();
+    }, 350);
+});
+
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: 'Dashboard',
@@ -224,6 +279,12 @@ const deleteProperty = () => {
                             <p class="text-sm font-medium">Accommodations</p>
                             <p class="text-2xl font-bold">
                                 {{ accommodations.meta.total }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Tenants</p>
+                            <p class="text-2xl font-bold">
+                                {{ tenants.meta.total }}
                             </p>
                         </div>
                         <div>
@@ -390,6 +451,99 @@ const deleteProperty = () => {
                             'pointer-events-none': !link.url,
                         }"
                         @click.prevent="applyExpenseParams({ page: link.label })"
+                        preserve-scroll
+                    >
+                        <Button
+                            :variant="link.active ? 'default' : 'outline'"
+                            size="sm"
+                            :disabled="!link.url"
+                            v-html="link.label"
+                        />
+                    </Link>
+                </div>
+            </div>
+
+            <div v-if="tenants.data.length > 0" class="grid gap-4">
+                <h2 class="text-xl font-semibold">Tenants</h2>
+                
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="tenantSearchQuery"
+                        placeholder="Search tenants..."
+                        class="max-w-sm"
+                    />
+                </div>
+
+                <div class="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleTenantSort('name')">
+                                        Name
+                                        <span v-if="tenantSortBy === 'name'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleTenantSort('email')">
+                                        Email
+                                        <span v-if="tenantSortBy === 'email'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleTenantSort('cpf')">
+                                        CPF
+                                        <span v-if="tenantSortBy === 'cpf'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleTenantSort('phone')">
+                                        Phone
+                                        <span v-if="tenantSortBy === 'phone'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>Accommodation</TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="tenant in tenants.data"
+                                :key="tenant.id"
+                            >
+                                <TableCell class="font-medium">{{ tenant.name }}</TableCell>
+                                <TableCell>{{ tenant.email }}</TableCell>
+                                <TableCell>{{ tenant.cpf }}</TableCell>
+                                <TableCell>{{ tenant.phone }}</TableCell>
+                                <TableCell>{{ tenant.stay?.accommodation.label || '-' }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Link :href="`/tenants/${tenant.id}`">
+                                        <Button variant="outline" size="sm">View Details</Button>
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="tenants.data.length === 0">
+                                <TableCell colspan="6" class="text-center">
+                                    No tenants found
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                <!-- Pagination -->
+                <div
+                    v-if="tenants.meta.last_page > 1"
+                    class="mt-4 flex items-center justify-center gap-2"
+                >
+                    <Link
+                        v-for="(link, index) in tenants.meta.links"
+                        :key="index"
+                        :href="link.url || '#'"
+                        :class="{
+                            'pointer-events-none': !link.url,
+                        }"
+                        @click.prevent="applyTenantParams({ page: link.label })"
                         preserve-scroll
                     >
                         <Button

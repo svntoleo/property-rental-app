@@ -3,11 +3,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\AccommodationResource;
 use App\Http\Resources\ExpenseResource;
+use App\Http\Resources\TenantResource;
 
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Resources\PropertyResource;
 use App\Models\Property;
+use App\Models\Tenant;
 use Inertia\Inertia;
 
 class PropertyController extends Controller
@@ -127,6 +129,33 @@ class PropertyController extends Controller
                 'accommodation_sort_dir' => $accommodationSortDir,
             ]);
 
+        // Tenants search and sorting
+        $tenantSearch = request('tenant_search');
+        $tenantSortBy = request('tenant_sort_by', 'name');
+        $tenantSortDir = request('tenant_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $allowedTenantSorts = ['name', 'email', 'cpf', 'phone'];
+        $tenantSortBy = in_array($tenantSortBy, $allowedTenantSorts) ? $tenantSortBy : 'name';
+
+        $tenants = Tenant::with(['stay.accommodation'])
+            ->whereHas('stay.accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->when(!empty($tenantSearch), function ($query) use ($tenantSearch) {
+                $query->where(function ($q) use ($tenantSearch) {
+                    $q->where('name', 'like', "%{$tenantSearch}%")
+                        ->orWhere('email', 'like', "%{$tenantSearch}%")
+                        ->orWhere('cpf', 'like', "%{$tenantSearch}%")
+                        ->orWhere('phone', 'like', "%{$tenantSearch}%");
+                });
+            })
+            ->orderBy($tenantSortBy, $tenantSortDir)
+            ->paginate(10)
+            ->appends([
+                'tenant_search' => $tenantSearch,
+                'tenant_sort_by' => $tenantSortBy,
+                'tenant_sort_dir' => $tenantSortDir,
+            ]);
+
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
             'expenses' => ExpenseResource::collection($expenses),
@@ -137,6 +166,10 @@ class PropertyController extends Controller
             'accommodation_search' => $accommodationSearch ?? '',
             'accommodation_sort_by' => $accommodationSortBy,
             'accommodation_sort_dir' => $accommodationSortDir,
+            'tenants' => TenantResource::collection($tenants),
+            'tenant_search' => $tenantSearch ?? '',
+            'tenant_sort_by' => $tenantSortBy,
+            'tenant_sort_dir' => $tenantSortDir,
         ]);
     }
 
