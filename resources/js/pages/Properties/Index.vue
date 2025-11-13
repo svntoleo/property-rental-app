@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PropertyForm from '@/components/PropertyForm.vue';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -53,10 +53,11 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Modal state via composable
+// Composables
 const { isOpen, mode, entity, open, close, onSuccess } = useResourceModal<Property>();
+const { breadcrumbs } = useBreadcrumbs();
 
-function openModal(m: 'create' | 'edit' | 'view', property: Property | null = null) {
+function openModal(m: 'create' | 'edit', property: Property | null = null) {
     open(m, property);
 }
 
@@ -68,17 +69,6 @@ function handleSuccess() {
     onSuccess();
     applyParams();
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Properties',
-        href: '/properties',
-    },
-];
 
 const searchQuery = ref(props.search || '');
 const sortBy = ref<string>(props.sort_by || '');

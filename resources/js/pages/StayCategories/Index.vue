@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +10,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import StayCategoryForm from '@/components/StayCategoryForm.vue';
 
@@ -46,16 +46,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Stay Categories',
-        href: '/stay-categories',
-    },
-];
+const { breadcrumbs } = useBreadcrumbs();
 
 const deleteCategory = (id: number) => {
     if (confirm('Are you sure you want to delete this category?')) {

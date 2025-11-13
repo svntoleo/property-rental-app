@@ -59,6 +59,12 @@ class ExpenseCategoryController extends Controller
     {
         $expenseCategory->update($request->validated());
 
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('expense-categories.show', $expenseCategory)
+                ->with('success', 'Expense category updated successfully.');
+        }
+
         return redirect()
             ->route('expense-categories.index')
             ->with('success', 'Expense category updated successfully.');

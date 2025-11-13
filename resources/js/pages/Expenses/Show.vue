@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDate, formatCurrency } from '@/lib/format';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import ExpenseForm from '@/components/ExpenseForm.vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,6 +23,7 @@ interface Property {
 interface Accommodation {
     id: number;
     label: string;
+    property_id: number;
 }
 
 interface ExpenseCategory {
@@ -40,24 +44,21 @@ interface Expense {
 
 interface Props {
     expense: Expense;
+    properties: Property[];
+    accommodations: Accommodation[];
+    expenseCategories: ExpenseCategory[];
 }
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Expenses',
-        href: '/expenses',
-    },
-    {
-        title: props.expense.label,
-        href: `/expenses/${props.expense.id}`,
-    },
-];
+const { breadcrumbs } = useBreadcrumbs();
+
+const { isOpen, open, close, entity, mode } = useResourceModal();
+
+const handleEditSuccess = () => {
+    close();
+    router.visit(`/expenses/${props.expense.id}`);
+};
 
 const deleteExpense = () => {
     if (confirm('Are you sure you want to delete this expense?')) {
@@ -71,21 +72,32 @@ const deleteExpense = () => {
 <template>
     <Head :title="expense.label" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs as any">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">{{ expense.label }}</h1>
                 <div class="flex gap-2">
-                    <Link :href="`/expenses/${expense.id}/edit`">
-                        <Button variant="outline">Edit</Button>
-                    </Link>
+                    <Button variant="outline" @click="open('edit', expense)">Edit</Button>
                     <Button variant="destructive" @click="deleteExpense"
                         >Delete</Button
                     >
                 </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+                        <div class="grid gap-4 md:grid-cols-2">
+                                <ResourceDialog :open="isOpen" :title="'Edit Expense'" @close="close">
+                                    <ExpenseForm
+                                        v-if="isOpen"
+                                        :expense="(entity as any) || undefined"
+                                        :properties="properties"
+                                        :accommodations="accommodations"
+                                        :expenseCategories="expenseCategories"
+                                        :isEdit="true"
+                                        context="show"
+                                        @success="handleEditSuccess"
+                                        @cancel="close"
+                                    />
+                                </ResourceDialog>
                 <Card>
                     <CardHeader>
                         <CardTitle>Expense Details</CardTitle>

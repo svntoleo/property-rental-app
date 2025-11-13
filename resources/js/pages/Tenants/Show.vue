@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import TenantForm from '@/components/TenantForm.vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -44,24 +47,19 @@ interface Tenant {
 
 interface Props {
     tenant: Tenant;
+    stays: Stay[];
 }
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Tenants',
-        href: '/tenants',
-    },
-    {
-        title: props.tenant.name,
-        href: `/tenants/${props.tenant.id}`,
-    },
-];
+const { breadcrumbs } = useBreadcrumbs();
+
+const { isOpen, open, close, entity, mode } = useResourceModal();
+
+const handleEditSuccess = () => {
+    close();
+    router.visit(`/tenants/${props.tenant.id}`);
+};
 
 const deleteTenant = () => {
     if (confirm('Are you sure you want to delete this tenant?')) {
@@ -81,21 +79,30 @@ const formatPhone = (phone: string) => {
 <template>
     <Head :title="tenant.name" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs as any">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">{{ tenant.name }}</h1>
                 <div class="flex gap-2">
-                    <Link :href="`/tenants/${tenant.id}/edit`">
-                        <Button variant="outline">Edit</Button>
-                    </Link>
+                    <Button variant="outline" @click="open('edit', tenant)">Edit</Button>
                     <Button variant="destructive" @click="deleteTenant"
                         >Delete</Button
                     >
                 </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+                        <div class="grid gap-4 md:grid-cols-2">
+                                <ResourceDialog :open="isOpen" :title="'Edit Tenant'" @close="close">
+                                    <TenantForm
+                                        v-if="isOpen"
+                                        :tenant="(entity as any) || undefined"
+                                        :stays="stays"
+                                        :isEdit="true"
+                                        context="show"
+                                        @success="handleEditSuccess"
+                                        @cancel="close"
+                                    />
+                                </ResourceDialog>
                 <Card>
                     <CardHeader>
                         <CardTitle>Contact Information</CardTitle>

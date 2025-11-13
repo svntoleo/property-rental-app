@@ -20,11 +20,13 @@ interface Props {
   properties: Property[];
   accommodation?: Accommodation;
   isEdit?: boolean;
+  context?: 'index' | 'show';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   success: [];
+  cancel: [];
 }>();
 
 const form = useForm({
@@ -34,7 +36,8 @@ const form = useForm({
 
 function submit() {
   if (props.isEdit && props.accommodation?.id) {
-    form.put(`/accommodations/${props.accommodation.id}`, {
+  const url = `/accommodations/${props.accommodation.id}` + (props.context === 'show' ? '?from=show' : '');
+  form.put(url, {
       onSuccess: () => emit('success'),
     });
   } else {

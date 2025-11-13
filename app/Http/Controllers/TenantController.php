@@ -98,8 +98,12 @@ class TenantController extends Controller
             'stay.category',
         ]);
 
+        // Get all stays for edit modal dropdown
+        $stays = Stay::with(['accommodation.property'])->get();
+
         return Inertia::render('Tenants/Show', [
             'tenant' => new TenantResource($tenant),
+            'stays' => StayResource::collection($stays),
         ]);
     }
 
@@ -111,6 +115,12 @@ class TenantController extends Controller
     public function update(UpdateTenantRequest $request, Tenant $tenant)
     {
         $tenant->update($request->validated());
+
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('tenants.show', $tenant)
+                ->with('success', 'Tenant updated successfully.');
+        }
 
         return redirect()
             ->route('tenants.index')

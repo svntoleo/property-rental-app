@@ -5,19 +5,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { edit } from '@/routes/user-password';
 import { Form, Head } from '@inertiajs/vue3';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { type BreadcrumbItem } from '@/types';
 
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'Password settings',
-        href: edit().url,
-    },
-];
+const { breadcrumbs: breadcrumbItems } = useBreadcrumbs();
 </script>
 
 <template>

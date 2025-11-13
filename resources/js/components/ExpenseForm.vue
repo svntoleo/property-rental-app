@@ -48,11 +48,13 @@ interface Props {
     accommodations: Accommodation[];
     expenseCategories: ExpenseCategory[];
     isEdit?: boolean;
+    context?: 'index' | 'show';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
     success: [];
+    cancel: [];
 }>();
 
 const form = useForm({
@@ -67,7 +69,8 @@ const form = useForm({
 
 const submit = () => {
     if (props.isEdit && props.expense) {
-        form.put(`/expenses/${props.expense.id}`, {
+    const url = `/expenses/${props.expense.id}` + (props.context === 'show' ? '?from=show' : '');
+    form.put(url, {
             onSuccess: () => emit('success'),
         });
     } else {

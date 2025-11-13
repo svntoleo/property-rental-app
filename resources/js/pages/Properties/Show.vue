@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { computed } from 'vue';
 import { formatDate, formatCurrency } from '@/lib/format';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import PropertyForm from '@/components/PropertyForm.vue';
+import { useResourceModal } from '@/composables/useResourceModal';
 import {
     Card,
     CardContent,
@@ -329,20 +332,20 @@ watch(tenantSearchQuery, () => {
     }, 350);
 });
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Properties',
-        href: '/properties',
-    },
-    {
-        title: props.property.label,
-        href: `/properties/${props.property.id}`,
-    },
-]);
+const { breadcrumbs } = useBreadcrumbs();
+
+// Modal state for in-place edit
+const { isOpen, mode, entity, open, close, onSuccess } = useResourceModal<Property>();
+
+function openEditModal() {
+    open('edit', props.property as unknown as Property);
+}
+
+function handleEditSuccess() {
+    onSuccess();
+    // reload current show page to reflect updated data
+    router.get(`/properties/${props.property.id}`, {}, { replace: true });
+}
 
 const deleteProperty = () => {
     if (confirm('Are you sure you want to delete this property?')) {
@@ -356,21 +359,27 @@ const deleteProperty = () => {
 <template>
     <Head :title="property.label" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs as any">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">{{ property.label }}</h1>
                 <div class="flex gap-2">
-                    <Link :href="`/properties/${property.id}/edit`">
-                        <Button variant="outline">Edit</Button>
-                    </Link>
-                    <Button variant="destructive" @click="deleteProperty"
-                        >Delete</Button
-                    >
+                    <Button variant="outline" @click="openEditModal">Edit</Button>
+                    <Button variant="destructive" @click="deleteProperty">Delete</Button>
                 </div>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
+                                <ResourceDialog :open="isOpen" :title="'Edit Property'" @close="close">
+                                    <PropertyForm
+                                        v-if="isOpen"
+                                        :property="(entity as any) || undefined"
+                                        :isEdit="true"
+                                        context="show"
+                                        @success="handleEditSuccess"
+                                        @cancel="close"
+                                    />
+                                </ResourceDialog>
                 <Card>
                     <CardHeader>
                         <CardTitle>Property Details</CardTitle>

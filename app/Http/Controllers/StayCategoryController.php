@@ -59,6 +59,12 @@ class StayCategoryController extends Controller
     {
         $stayCategory->update($request->validated());
 
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('stay-categories.show', $stayCategory)
+                ->with('success', 'Stay category updated successfully.');
+        }
+
         return redirect()
             ->route('stay-categories.index')
             ->with('success', 'Stay category updated successfully.');

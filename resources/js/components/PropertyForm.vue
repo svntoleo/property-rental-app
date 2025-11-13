@@ -51,6 +51,11 @@ import { Button } from '@/components/ui/button';
 const props = defineProps({
   property: Object,
   isEdit: Boolean,
+  // optional context: 'index' | 'show'
+  context: {
+    type: String,
+    default: 'index'
+  }
 });
 
 const emit = defineEmits(['success', 'cancel']);
@@ -73,7 +78,8 @@ watch(
 
 function submit() {
   if (props.isEdit && props.property?.id) {
-    form.put(`/properties/${props.property.id}`, {
+    const url = `/properties/${props.property.id}` + (props.context === 'show' ? '?from=show' : '');
+    form.put(url, {
       onSuccess: () => emit('success'),
     });
   } else {

@@ -108,8 +108,16 @@ class ExpenseController extends Controller
     {
         $expense->load(['property', 'accommodation', 'category']);
 
+        // Get all options for edit modal dropdowns
+        $properties = Property::select('id', 'label')->get();
+        $accommodations = Accommodation::select('id', 'label', 'property_id')->get();
+        $expenseCategories = ExpenseCategory::all(['id', 'label']);
+
         return Inertia::render('Expenses/Show', [
             'expense' => new ExpenseResource($expense),
+            'properties' => PropertyResource::collection($properties),
+            'accommodations' => AccommodationResource::collection($accommodations),
+            'expenseCategories' => ExpenseCategoryResource::collection($expenseCategories),
         ]);
     }
 
@@ -121,6 +129,12 @@ class ExpenseController extends Controller
     public function update(UpdateExpenseRequest $request, Expense $expense)
     {
         $expense->update($request->validated());
+
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('expenses.show', $expense)
+                ->with('success', 'Expense updated successfully.');
+        }
 
         return redirect()
             ->route('expenses.index')

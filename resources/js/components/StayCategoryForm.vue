@@ -13,11 +13,13 @@ interface StayCategory {
 interface Props {
     stayCategory?: StayCategory;
     isEdit?: boolean;
+    context?: 'index' | 'show';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
     success: [];
+    cancel: [];
 }>();
 
 const form = useForm({
@@ -26,7 +28,8 @@ const form = useForm({
 
 const submit = () => {
     if (props.isEdit && props.stayCategory) {
-        form.put(`/stay-categories/${props.stayCategory.id}`, {
+    const url = `/stay-categories/${props.stayCategory.id}` + (props.context === 'show' ? '?from=show' : '');
+    form.put(url, {
             onSuccess: () => emit('success'),
         });
     } else {

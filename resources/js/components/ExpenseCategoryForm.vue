@@ -13,11 +13,13 @@ interface ExpenseCategory {
 interface Props {
     expenseCategory?: ExpenseCategory;
     isEdit?: boolean;
+    context?: 'index' | 'show';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
     success: [];
+    cancel: [];
 }>();
 
 const form = useForm({
@@ -26,7 +28,8 @@ const form = useForm({
 
 const submit = () => {
     if (props.isEdit && props.expenseCategory) {
-        form.put(`/expense-categories/${props.expenseCategory.id}`, {
+    const url = `/expense-categories/${props.expenseCategory.id}` + (props.context === 'show' ? '?from=show' : '');
+    form.put(url, {
             onSuccess: () => emit('success'),
         });
     } else {

@@ -250,9 +250,14 @@ class PropertyController extends Controller
     public function update(UpdatePropertyRequest $request, Property $property)
     {
         $property->update($request->validated());
+        // Redirect back to show page if edit originated there
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('properties.show', $property)
+                ->with('success', 'Property updated successfully.');
+        }
 
-        return redirect()
-            ->route('properties.index')
+        return redirect()->route('properties.index')
             ->with('success', 'Property updated successfully.');
     }
 

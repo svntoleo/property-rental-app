@@ -32,11 +32,13 @@ interface Props {
   stays: Stay[];
   tenant?: Tenant;
   isEdit?: boolean;
+  context?: 'index' | 'show';
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   success: [];
+  cancel: [];
 }>();
 
 const form = useForm({
@@ -57,7 +59,8 @@ const formatDate = (date: string) => {
 
 function submit() {
   if (props.isEdit && props.tenant?.id) {
-    form.put(`/tenants/${props.tenant.id}`, {
+  const url = `/tenants/${props.tenant.id}` + (props.context === 'show' ? '?from=show' : '');
+  form.put(url, {
       onSuccess: () => emit('success'),
     });
   } else {

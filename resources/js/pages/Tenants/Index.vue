@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import TenantForm from '@/components/TenantForm.vue';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -72,11 +72,13 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-// Modal state via composable
+
+// Composables
 const { isOpen, mode, entity, open, close, onSuccess } = useResourceModal<Tenant>();
+const { breadcrumbs } = useBreadcrumbs();
 const stays = ref<Stay[]>(props.stays || []);
 
-function openModal(m: 'create' | 'edit' | 'view', tenant: Tenant | null = null) {
+function openModal(m: 'create' | 'edit', tenant: Tenant | null = null) {
     open(m, tenant);
 }
 
@@ -89,17 +91,6 @@ function handleSuccess() {
     // Refresh the list after create/edit
     applyParams();
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Tenants',
-        href: '/tenants',
-    },
-];
 
 const searchQuery = ref(props.search || '');
 const sortBy = ref<string>(props.sort_by || '');

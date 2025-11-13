@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import ExpenseCategoryForm from '@/components/ExpenseCategoryForm.vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 import {
@@ -47,20 +50,14 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Expense Categories',
-        href: '/expense-categories',
-    },
-    {
-        title: props.category.label,
-        href: `/expense-categories/${props.category.id}`,
-    },
-];
+const { breadcrumbs } = useBreadcrumbs();
+
+const { isOpen, open, close, entity, mode } = useResourceModal();
+
+const handleEditSuccess = () => {
+    close();
+    router.visit(`/expense-categories/${props.category.id}`);
+};
 
 const deleteCategory = () => {
     if (confirm('Are you sure you want to delete this category?')) {
@@ -72,23 +69,30 @@ const deleteCategory = () => {
 <template>
     <Head :title="category.label" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs as any">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">{{ category.label }}</h1>
                 <div class="flex gap-2">
-                    <Link
-                        :href="`/expense-categories/${category.id}/edit`"
-                    >
-                        <Button variant="outline">Edit</Button>
-                    </Link>
+                    <Button variant="outline" @click="open('edit', category)">Edit</Button>
                     <Button variant="destructive" @click="deleteCategory"
                         >Delete</Button
                     >
                 </div>
             </div>
 
-            <Card>
+                        <ResourceDialog :open="isOpen" :title="'Edit Expense Category'" @close="close">
+                            <ExpenseCategoryForm
+                                v-if="isOpen"
+                                :expenseCategory="(entity as any) || undefined"
+                                :isEdit="true"
+                                context="show"
+                                @success="handleEditSuccess"
+                                @cancel="close"
+                            />
+                        </ResourceDialog>
+
+                        <Card>
                 <CardHeader>
                     <CardTitle>Statistics</CardTitle>
                 </CardHeader>

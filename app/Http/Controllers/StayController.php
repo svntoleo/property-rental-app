@@ -120,8 +120,14 @@ class StayController extends Controller
             'tenants',
         ]);
 
+        // Get all options for edit modal dropdowns
+        $accommodations = Accommodation::with('property')->get();
+        $stayCategories = StayCategory::all(['id', 'label']);
+
         return Inertia::render('Stays/Show', [
             'stay' => new StayResource($stay),
+            'accommodations' => AccommodationResource::collection($accommodations),
+            'stayCategories' => StayCategoryResource::collection($stayCategories),
         ]);
     }
 
@@ -133,6 +139,12 @@ class StayController extends Controller
     public function update(UpdateStayRequest $request, Stay $stay)
     {
         $stay->update($request->validated());
+
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('stays.show', $stay)
+                ->with('success', 'Stay updated successfully.');
+        }
 
         return redirect()
             ->route('stays.index')

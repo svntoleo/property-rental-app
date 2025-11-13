@@ -91,8 +91,12 @@ class AccommodationController extends Controller
             'expenses.category',
         ]);
 
+        // Get all properties for edit modal dropdown
+        $properties = Property::select('id', 'label')->get();
+
         return Inertia::render('Accommodations/Show', [
             'accommodation' => new AccommodationResource($accommodation),
+            'properties' => PropertyResource::collection($properties),
         ]);
     }
 
@@ -104,6 +108,12 @@ class AccommodationController extends Controller
     public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
     {
         $accommodation->update($request->validated());
+
+        if ($request->query('from') === 'show') {
+            return redirect()
+                ->route('accommodations.show', $accommodation)
+                ->with('success', 'Accommodation updated successfully.');
+        }
 
         return redirect()
             ->route('accommodations.index')

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { ref, watch } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
+import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import StayForm from '@/components/StayForm.vue';
 
@@ -73,16 +73,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-    {
-        title: 'Stays',
-        href: '/stays',
-    },
-];
+const { breadcrumbs } = useBreadcrumbs();
 
 const searchQuery = ref(props.search || '');
 const sortBy = ref<string>(props.sort_by || '');
