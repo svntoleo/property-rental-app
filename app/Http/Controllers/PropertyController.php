@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AccommodationResource;
 use App\Http\Resources\ExpenseResource;
 
 use App\Http\Requests\StorePropertyRequest;
@@ -81,32 +82,61 @@ class PropertyController extends Controller
      */
     public function show(Property $property)
     {
-        $property->load([
-            'accommodations.stays.tenants',
-            'accommodations.expenses.category',
-        ]);
-
-
-        // Sorting for expenses
-        $sortBy = request('sort_by', 'date');
-        $sortDir = request('sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
-    $allowedSorts = ['label', 'price', 'date', 'description'];
-        $sortBy = in_array($sortBy, $allowedSorts) ? $sortBy : 'date';
+        // Expenses search and sorting
+        $expenseSearch = request('expense_search');
+        $expenseSortBy = request('expense_sort_by', 'date');
+        $expenseSortDir = request('expense_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
+        $allowedExpenseSorts = ['label', 'price', 'date', 'description'];
+        $expenseSortBy = in_array($expenseSortBy, $allowedExpenseSorts) ? $expenseSortBy : 'date';
 
         $expenses = $property->expenses()
             ->with('category')
-            ->orderBy($sortBy, $sortDir)
+            ->when(!empty($expenseSearch), function ($query) use ($expenseSearch) {
+                $query->where(function ($q) use ($expenseSearch) {
+                    $q->where('label', 'like', "%{$expenseSearch}%")
+                        ->orWhere('description', 'like', "%{$expenseSearch}%")
+                        ->orWhereHas('category', function ($cat) use ($expenseSearch) {
+                            $cat->where('label', 'like', "%{$expenseSearch}%");
+                        });
+                });
+            })
+            ->orderBy($expenseSortBy, $expenseSortDir)
             ->paginate(10)
             ->appends([
-                'sort_by' => $sortBy,
-                'sort_dir' => $sortDir,
+                'expense_search' => $expenseSearch,
+                'expense_sort_by' => $expenseSortBy,
+                'expense_sort_dir' => $expenseSortDir,
+            ]);
+
+        // Accommodations search and sorting
+        $accommodationSearch = request('accommodation_search');
+        $accommodationSortBy = request('accommodation_sort_by', 'label');
+        $accommodationSortDir = request('accommodation_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $allowedAccommodationSorts = ['label'];
+        $accommodationSortBy = in_array($accommodationSortBy, $allowedAccommodationSorts) ? $accommodationSortBy : 'label';
+
+        $accommodations = $property->accommodations()
+            ->when(!empty($accommodationSearch), function ($query) use ($accommodationSearch) {
+                $query->where('label', 'like', "%{$accommodationSearch}%");
+            })
+            ->orderBy($accommodationSortBy, $accommodationSortDir)
+            ->paginate(10)
+            ->appends([
+                'accommodation_search' => $accommodationSearch,
+                'accommodation_sort_by' => $accommodationSortBy,
+                'accommodation_sort_dir' => $accommodationSortDir,
             ]);
 
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
             'expenses' => ExpenseResource::collection($expenses),
-            'sort_by' => $sortBy,
-            'sort_dir' => $sortDir,
+            'expense_search' => $expenseSearch ?? '',
+            'expense_sort_by' => $expenseSortBy,
+            'expense_sort_dir' => $expenseSortDir,
+            'accommodations' => AccommodationResource::collection($accommodations),
+            'accommodation_search' => $accommodationSearch ?? '',
+            'accommodation_sort_by' => $accommodationSortBy,
+            'accommodation_sort_dir' => $accommodationSortDir,
         ]);
     }
 

@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { computed } from 'vue';
 import { formatDate, formatCurrency } from '@/lib/format';
 import {
@@ -26,7 +27,11 @@ interface Property {
     label: string;
     address: string;
     description: string | null;
-    accommodations?: any[];
+}
+
+interface Accommodation {
+    id: number;
+    label: string;
 }
 
 interface Expense {
@@ -56,8 +61,6 @@ interface PaginationMeta {
     per_page: number;
     to: number;
     total: number;
-    sort_by?: string;
-    sort_dir?: string;
 }
 
 interface Props {
@@ -66,37 +69,89 @@ interface Props {
         data: Expense[];
         meta: PaginationMeta;
     };
-    sort_by?: string;
-    sort_dir?: 'asc' | 'desc';
+    expense_search: string;
+    expense_sort_by?: string;
+    expense_sort_dir?: 'asc' | 'desc';
+    accommodations: {
+        data: Accommodation[];
+        meta: PaginationMeta;
+    };
+    accommodation_search: string;
+    accommodation_sort_by?: string;
+    accommodation_sort_dir?: 'asc' | 'desc';
 }
 
 
 const props = defineProps<Props>();
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { router as inertiaRouter } from '@inertiajs/vue3';
 
-// Get current sort from props or default
-const sortBy = ref(props.sort_by || 'label');
-const sortDir = ref(props.sort_dir || 'asc');
+// Expenses search and sorting
+const expenseSearchQuery = ref(props.expense_search || '');
+const expenseSortBy = ref(props.expense_sort_by || 'date');
+const expenseSortDir = ref(props.expense_sort_dir || 'desc');
+
+let expenseDebounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 function applyExpenseParams(extra: Record<string, any> = {}) {
     const params: Record<string, any> = {};
-    params.sort_by = sortBy.value;
-    params.sort_dir = sortDir.value;
+    if (expenseSearchQuery.value) params.expense_search = expenseSearchQuery.value;
+    params.expense_sort_by = expenseSortBy.value;
+    params.expense_sort_dir = expenseSortDir.value;
     Object.assign(params, extra);
     inertiaRouter.get(props.expenses.meta.path, params, { preserveScroll: true, preserveState: true });
 }
 
 function toggleExpenseSort(column: string) {
-    if (sortBy.value === column) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+    if (expenseSortBy.value === column) {
+        expenseSortDir.value = expenseSortDir.value === 'asc' ? 'desc' : 'asc';
     } else {
-        sortBy.value = column;
-        sortDir.value = 'asc';
+        expenseSortBy.value = column;
+        expenseSortDir.value = 'asc';
     }
     applyExpenseParams();
 }
+
+watch(expenseSearchQuery, () => {
+    if (expenseDebounceHandle) clearTimeout(expenseDebounceHandle);
+    expenseDebounceHandle = setTimeout(() => {
+        applyExpenseParams();
+    }, 350);
+});
+
+// Accommodations search and sorting
+const accommodationSearchQuery = ref(props.accommodation_search || '');
+const accommodationSortBy = ref(props.accommodation_sort_by || 'label');
+const accommodationSortDir = ref(props.accommodation_sort_dir || 'asc');
+
+let accommodationDebounceHandle: ReturnType<typeof setTimeout> | undefined;
+
+function applyAccommodationParams(extra: Record<string, any> = {}) {
+    const params: Record<string, any> = {};
+    if (accommodationSearchQuery.value) params.accommodation_search = accommodationSearchQuery.value;
+    params.accommodation_sort_by = accommodationSortBy.value;
+    params.accommodation_sort_dir = accommodationSortDir.value;
+    Object.assign(params, extra);
+    inertiaRouter.get(props.accommodations.meta.path, params, { preserveScroll: true, preserveState: true });
+}
+
+function toggleAccommodationSort(column: string) {
+    if (accommodationSortBy.value === column) {
+        accommodationSortDir.value = accommodationSortDir.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        accommodationSortBy.value = column;
+        accommodationSortDir.value = 'asc';
+    }
+    applyAccommodationParams();
+}
+
+watch(accommodationSearchQuery, () => {
+    if (accommodationDebounceHandle) clearTimeout(accommodationDebounceHandle);
+    accommodationDebounceHandle = setTimeout(() => {
+        applyAccommodationParams();
+    }, 350);
+});
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
@@ -168,7 +223,7 @@ const deleteProperty = () => {
                         <div>
                             <p class="text-sm font-medium">Accommodations</p>
                             <p class="text-2xl font-bold">
-                                {{ property.accommodations?.length || 0 }}
+                                {{ accommodations.meta.total }}
                             </p>
                         </div>
                         <div>
@@ -181,29 +236,86 @@ const deleteProperty = () => {
                 </Card>
             </div>
 
-            <div v-if="property.accommodations && property.accommodations.length > 0" class="grid gap-4">
+            <div v-if="accommodations.data.length > 0" class="grid gap-4">
                 <h2 class="text-xl font-semibold">Accommodations</h2>
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <Card
-                        v-for="accommodation in property.accommodations"
-                        :key="accommodation.id"
+                
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="accommodationSearchQuery"
+                        placeholder="Search accommodations..."
+                        class="max-w-sm"
+                    />
+                </div>
+
+                <div class="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('label')">
+                                        Label
+                                        <span v-if="accommodationSortBy === 'label'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead class="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="accommodation in accommodations.data"
+                                :key="accommodation.id"
+                            >
+                                <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Link :href="`/accommodations/${accommodation.id}`">
+                                        <Button variant="outline" size="sm">View Details</Button>
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="accommodations.data.length === 0">
+                                <TableCell colspan="2" class="text-center">
+                                    No accommodations found
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+
+                <!-- Pagination -->
+                <div
+                    v-if="accommodations.meta.last_page > 1"
+                    class="mt-4 flex items-center justify-center gap-2"
+                >
+                    <Link
+                        v-for="(link, index) in accommodations.meta.links"
+                        :key="index"
+                        :href="link.url || '#'"
+                        :class="{
+                            'pointer-events-none': !link.url,
+                        }"
+                        @click.prevent="applyAccommodationParams({ page: link.label })"
+                        preserve-scroll
                     >
-                        <CardHeader>
-                            <CardTitle>{{ accommodation.label }}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Link :href="`/accommodations/${accommodation.id}`">
-                                <Button variant="outline" size="sm"
-                                    >View Details</Button
-                                >
-                            </Link>
-                        </CardContent>
-                    </Card>
+                        <Button
+                            :variant="link.active ? 'default' : 'outline'"
+                            size="sm"
+                            :disabled="!link.url"
+                            v-html="link.label"
+                        />
+                    </Link>
                 </div>
             </div>
 
             <div v-if="expenses.data.length > 0" class="grid gap-4">
                 <h2 class="text-xl font-semibold">Expenses</h2>
+                
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="expenseSearchQuery"
+                        placeholder="Search expenses..."
+                        class="max-w-sm"
+                    />
+                </div>
                 <Card>
                     <CardContent class="p-0">
                         <Table>
@@ -212,26 +324,26 @@ const deleteProperty = () => {
                                     <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('label')">
                                             Label
-                                            <span v-if="sortBy === 'label'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                            <span v-if="expenseSortBy === 'label'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
                                     <TableHead>Category</TableHead>
                                     <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('price')">
                                             Price
-                                            <span v-if="sortBy === 'price'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                            <span v-if="expenseSortBy === 'price'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
                                     <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('date')">
                                             Date
-                                            <span v-if="sortBy === 'date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                            <span v-if="expenseSortBy === 'date'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
                                     <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('description')">
                                             Description
-                                            <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                            <span v-if="expenseSortBy === 'description'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
                                     <TableHead>Actions</TableHead>
@@ -253,6 +365,11 @@ const deleteProperty = () => {
                                                 >View Details</Button
                                             >
                                         </Link>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow v-if="expenses.data.length === 0">
+                                    <TableCell colspan="6" class="text-center">
+                                        No expenses found
                                     </TableCell>
                                 </TableRow>
                             </TableBody>
