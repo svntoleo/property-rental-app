@@ -27,19 +27,6 @@ class Tenant extends Model
     }
 
     /**
-     * Get the tenant's masked CPF.
-     */
-    public function getMaskedCpfAttribute(): string
-    {
-        if (! $this->cpf) {
-            return '';
-        }
-
-        // Mask CPF: 123.456.789-10 -> 123.***.**-10
-        return preg_replace('/(\d{3})\.\d{3}\.\d{2}(-\d{2})/', '$1.***.**$2', $this->cpf);
-    }
-
-    /**
      * Format CPF with mask: 12345678910 -> 123.456.789-10
      */
     public function getFormattedCpfAttribute(): string
@@ -108,22 +95,6 @@ class Tenant extends Model
         return $query->whereHas('stay', function ($q) {
             $q->where('end_date', '>=', now());
         });
-    }
-
-    /**
-     * Get tenant's full accommodation information through stay.
-     */
-    public function getAccommodationAttribute()
-    {
-        return $this->stay?->accommodation;
-    }
-
-    /**
-     * Get tenant's property information through stay and accommodation.
-     */
-    public function getPropertyAttribute()
-    {
-        return $this->stay?->accommodation?->property;
     }
 
     /**

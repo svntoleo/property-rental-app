@@ -21,6 +21,7 @@ class TenantResource extends JsonResource
                 // Use the accessor-defined attribute name (formatted_cpf)
                 // but expose it to the frontend as cpf_formatted for consistency
                 'cpf_formatted' => $this->formatted_cpf,
+            'is_active' => $this->is_active,
             'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];
     }

@@ -63,16 +63,6 @@ class Stay extends Model
     }
 
     /**
-     * Get the price per day.
-     */
-    public function getPricePerDayAttribute(): float
-    {
-        $days = $this->days;
-
-        return $days > 0 ? $this->price / $days : 0;
-    }
-
-    /**
      * Scope a query to only include active stays.
      */
     public function scopeActive($query)

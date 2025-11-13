@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
     Card,
@@ -37,6 +38,7 @@ interface Tenant {
     email: string;
     phone: string;
     cpf: string;
+    is_active: boolean;
     stay: Stay;
 }
 
@@ -125,6 +127,12 @@ const formatPhone = (phone: string) => {
                         <CardTitle>Stay Information</CardTitle>
                     </CardHeader>
                     <CardContent class="space-y-2">
+                        <div>
+                            <p class="text-sm font-medium">Status</p>
+                            <Badge :variant="tenant.is_active ? 'default' : 'secondary'">
+                                {{ tenant.is_active ? 'Active' : 'Inactive' }}
+                            </Badge>
+                        </div>
                         <div>
                             <p class="text-sm font-medium">Property</p>
                             <Link
