@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,11 +12,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import AccommodationForm from '@/components/AccommodationForm.vue';
+import AccommodationView from '@/components/AccommodationView.vue';
 
 interface Property {
     id: number;
     label: string;
+    address?: string;
 }
 
 interface Accommodation {
@@ -47,6 +52,7 @@ interface Props {
         data: Accommodation[];
         meta: PaginationMeta;
     };
+    properties: Property[];
     search: string;
     sort_by?: string;
     sort_dir?: 'asc' | 'desc';
@@ -103,6 +109,27 @@ const deleteAccommodation = (id: number) => {
         router.delete(`/accommodations/${id}`);
     }
 };
+
+// Modal state
+const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
+    useResourceModal<Accommodation>();
+
+const getModalTitle = () => {
+    if (mode.value === 'create') return 'Create Accommodation';
+    if (mode.value === 'edit') return 'Edit Accommodation';
+    return 'Accommodation Details';
+};
+
+// Transform accommodation for form (needs property_id instead of property object)
+const accommodationForForm = computed(() => {
+    if (!entity.value) return undefined;
+    return {
+        id: entity.value.id,
+        label: entity.value.label,
+        property_id: entity.value.property.id,
+    };
+});
+
 </script>
 
 <template>
@@ -112,9 +139,7 @@ const deleteAccommodation = (id: number) => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">Accommodations</h1>
-                <Link href="/accommodations/create">
-                    <Button>Create Accommodation</Button>
-                </Link>
+                <Button @click="openModal('create')">Create Accommodation</Button>
             </div>
 
             <div class="flex items-center gap-2">
@@ -155,18 +180,20 @@ const deleteAccommodation = (id: number) => {
                             <TableCell>{{ accommodation.property.label }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Link :href="`/accommodations/${accommodation.id}`">
-                                        <Button variant="outline" size="sm"
-                                            >View</Button
-                                        >
-                                    </Link>
-                                    <Link
-                                        :href="`/accommodations/${accommodation.id}/edit`"
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('view', accommodation)"
                                     >
-                                        <Button variant="outline" size="sm"
-                                            >Edit</Button
-                                        >
-                                    </Link>
+                                        View
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('edit', accommodation)"
+                                    >
+                                        Edit
+                                    </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -190,27 +217,37 @@ const deleteAccommodation = (id: number) => {
                 v-if="accommodations.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
             >
-                <Link
+                <Button
                     v-for="(link, index) in accommodations.meta.links"
                     :key="index"
-                    :href="link.url || '#'"
-                    :class="{
-                        'pointer-events-none': !link.url,
-                    }"
-                    :data="{
-                        ...(searchQuery ? { search: searchQuery } : {}),
-                        ...(sortBy ? { sort_by: sortBy } : {}),
-                        ...(sortBy ? { sort_dir: sortDir } : {}),
-                    }"
-                >
-                    <Button
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        v-html="link.label"
-                    />
-                </Link>
+                    :variant="link.active ? 'default' : 'outline'"
+                    size="sm"
+                    :disabled="!link.url"
+                    @click="
+                        link.url &&
+                            router.visit(link.url, {
+                                data: {
+                                    ...(searchQuery ? { search: searchQuery } : {}),
+                                    ...(sortBy ? { sort_by: sortBy } : {}),
+                                    ...(sortBy ? { sort_dir: sortDir } : {}),
+                                },
+                            })
+                    "
+                    v-html="link.label"
+                />
             </div>
         </div>
+
+        <!-- Unified Modal -->
+        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+            <AccommodationForm
+                v-if="mode === 'create' || mode === 'edit'"
+                :accommodation="accommodationForForm"
+                :properties="properties"
+                :is-edit="mode === 'edit'"
+                @success="onSuccess"
+            />
+            <AccommodationView v-else-if="mode === 'view'" :accommodation="entity!" />
+        </ResourceDialog>
     </AppLayout>
 </template>

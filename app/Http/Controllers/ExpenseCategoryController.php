@@ -74,7 +74,7 @@ class ExpenseCategoryController extends Controller
         $expenseCategory->update($request->validated());
 
         return redirect()
-            ->route('expense-categories.show', $expenseCategory)
+            ->route('expense-categories.index')
             ->with('success', 'Expense category updated successfully.');
     }
 

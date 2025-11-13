@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,7 +13,27 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import ExpenseForm from '@/components/ExpenseForm.vue';
+import ExpenseView from '@/components/ExpenseView.vue';
+
+interface Property {
+    id: number;
+    label: string;
+}
+
+interface Accommodation {
+    id: number;
+    label: string;
+    property_id: number;
+}
+
+interface ExpenseCategory {
+    id: number;
+    label: string;
+}
 
 interface Expense {
     id: number;
@@ -57,6 +77,9 @@ interface Props {
         data: Expense[];
         meta: PaginationMeta;
     };
+    properties: Property[];
+    accommodations: Accommodation[];
+    expenseCategories: ExpenseCategory[];
     search: string;
     sort_by?: string;
     sort_dir?: 'asc' | 'desc';
@@ -114,7 +137,25 @@ const deleteExpense = (id: number) => {
     }
 };
 
-// using shared formatDate util
+// Modal state
+const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
+    useResourceModal<Expense>();
+
+const getModalTitle = () => {
+    if (mode.value === 'create') return 'Create Expense';
+    if (mode.value === 'edit') return 'Edit Expense';
+    return 'Expense Details';
+};
+
+// Transform expense for form/view (accommodation: null -> undefined)
+const expenseForModal = computed(() => {
+    if (!entity.value) return undefined;
+    return {
+        ...entity.value,
+        accommodation: entity.value.accommodation ?? undefined,
+    };
+});
+
 </script>
 
 <template>
@@ -124,9 +165,7 @@ const deleteExpense = (id: number) => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">Expenses</h1>
-                <Link href="/expenses/create">
-                    <Button>Create Expense</Button>
-                </Link>
+                <Button @click="openModal('create')">Create Expense</Button>
             </div>
 
             <div class="flex items-center gap-2">
@@ -206,16 +245,20 @@ const deleteExpense = (id: number) => {
                             }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Link :href="`/expenses/${expense.id}`">
-                                        <Button variant="outline" size="sm"
-                                            >View</Button
-                                        >
-                                    </Link>
-                                    <Link :href="`/expenses/${expense.id}/edit`">
-                                        <Button variant="outline" size="sm"
-                                            >Edit</Button
-                                        >
-                                    </Link>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('view', expense)"
+                                    >
+                                        View
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('edit', expense)"
+                                    >
+                                        Edit
+                                    </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -239,27 +282,39 @@ const deleteExpense = (id: number) => {
                 v-if="expenses.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
             >
-                <Link
+                <Button
                     v-for="(link, index) in expenses.meta.links"
                     :key="index"
-                    :href="link.url || '#'"
-                    :class="{
-                        'pointer-events-none': !link.url,
-                    }"
-                    :data="{
-                        ...(searchQuery ? { search: searchQuery } : {}),
-                        ...(sortBy ? { sort_by: sortBy } : {}),
-                        ...(sortBy ? { sort_dir: sortDir } : {}),
-                    }"
-                >
-                    <Button
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        v-html="link.label"
-                    />
-                </Link>
+                    :variant="link.active ? 'default' : 'outline'"
+                    size="sm"
+                    :disabled="!link.url"
+                    @click="
+                        link.url &&
+                            router.visit(link.url, {
+                                data: {
+                                    ...(searchQuery ? { search: searchQuery } : {}),
+                                    ...(sortBy ? { sort_by: sortBy } : {}),
+                                    ...(sortBy ? { sort_dir: sortDir } : {}),
+                                },
+                            })
+                    "
+                    v-html="link.label"
+                />
             </div>
         </div>
+
+        <!-- Unified Modal -->
+        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+            <ExpenseForm
+                v-if="mode === 'create' || mode === 'edit'"
+                :expense="expenseForModal"
+                :properties="properties"
+                :accommodations="accommodations"
+                :expense-categories="expenseCategories"
+                :is-edit="mode === 'edit'"
+                @success="onSuccess"
+            />
+            <ExpenseView v-else-if="mode === 'view'" :expense="expenseForModal!" />
+        </ResourceDialog>
     </AppLayout>
 </template>

@@ -71,8 +71,16 @@ class ExpenseController extends Controller
             'sort_dir' => $sortDir,
         ]);
 
+        // Get properties, accommodations, and categories for modal create/edit
+        $properties = Property::select('id', 'label')->get();
+        $accommodations = Accommodation::select('id', 'label', 'property_id')->get();
+        $expenseCategories = ExpenseCategory::all(['id', 'label']);
+
         return Inertia::render('Expenses/Index', [
             'expenses' => ExpenseResource::collection($expenses),
+            'properties' => PropertyResource::collection($properties),
+            'accommodations' => AccommodationResource::collection($accommodations),
+            'expenseCategories' => ExpenseCategoryResource::collection($expenseCategories),
             'search' => $search ?? '',
             'sort_by' => $sortBy,
             'sort_dir' => $sortDir,
@@ -144,7 +152,7 @@ class ExpenseController extends Controller
         $expense->update($request->validated());
 
         return redirect()
-            ->route('expenses.show', $expense)
+            ->route('expenses.index')
             ->with('success', 'Expense updated successfully.');
     }
 

@@ -53,8 +53,12 @@ class AccommodationController extends Controller
             'sort_dir' => $sortDir,
         ]);
 
+        // Get properties for modal create/edit
+        $properties = Property::select('id', 'label', 'address')->get();
+
         return Inertia::render('Accommodations/Index', [
             'accommodations' => AccommodationResource::collection($accommodations),
+            'properties' => PropertyResource::collection($properties),
             'search' => $search ?? '',
             'sort_by' => $sortBy,
             'sort_dir' => $sortDir,
@@ -123,7 +127,7 @@ class AccommodationController extends Controller
         $accommodation->update($request->validated());
 
         return redirect()
-            ->route('accommodations.show', $accommodation)
+            ->route('accommodations.index')
             ->with('success', 'Accommodation updated successfully.');
     }
 

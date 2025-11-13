@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,6 +10,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useResourceModal } from '@/composables/useResourceModal';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import ExpenseCategoryForm from '@/components/ExpenseCategoryForm.vue';
+import ExpenseCategoryView from '@/components/ExpenseCategoryView.vue';
 
 interface ExpenseCategory {
     id: number;
@@ -59,6 +63,17 @@ const deleteCategory = (id: number) => {
         router.delete(`/expense-categories/${id}`);
     }
 };
+
+// Modal state
+const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
+    useResourceModal<ExpenseCategory>();
+
+const getModalTitle = () => {
+    if (mode.value === 'create') return 'Create Expense Category';
+    if (mode.value === 'edit') return 'Edit Expense Category';
+    return 'Expense Category Details';
+};
+
 </script>
 
 <template>
@@ -68,9 +83,7 @@ const deleteCategory = (id: number) => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">Expense Categories</h1>
-                <Link href="/expense-categories/create">
-                    <Button>Create Category</Button>
-                </Link>
+                <Button @click="openModal('create')">Create Category</Button>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -87,14 +100,20 @@ const deleteCategory = (id: number) => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent class="flex gap-2">
-                        <Link :href="`/expense-categories/${category.id}`">
-                            <Button variant="outline" size="sm">View</Button>
-                        </Link>
-                        <Link
-                            :href="`/expense-categories/${category.id}/edit`"
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            @click="openModal('view', category)"
                         >
-                            <Button variant="outline" size="sm">Edit</Button>
-                        </Link>
+                            View
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            @click="openModal('edit', category)"
+                        >
+                            Edit
+                        </Button>
                         <Button
                             variant="destructive"
                             size="sm"
@@ -110,22 +129,27 @@ const deleteCategory = (id: number) => {
                 v-if="categories.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
             >
-                <Link
+                <Button
                     v-for="(link, index) in categories.meta.links"
                     :key="index"
-                    :href="link.url || '#'"
-                    :class="{
-                        'pointer-events-none': !link.url,
-                    }"
-                >
-                    <Button
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        v-html="link.label"
-                    />
-                </Link>
+                    :variant="link.active ? 'default' : 'outline'"
+                    size="sm"
+                    :disabled="!link.url"
+                    @click="link.url && router.visit(link.url)"
+                    v-html="link.label"
+                />
             </div>
         </div>
+
+        <!-- Unified Modal -->
+        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+            <ExpenseCategoryForm
+                v-if="mode === 'create' || mode === 'edit'"
+                :expense-category="entity ?? undefined"
+                :is-edit="mode === 'edit'"
+                @success="onSuccess"
+            />
+            <ExpenseCategoryView v-else-if="mode === 'view'" :expense-category="entity!" />
+        </ResourceDialog>
     </AppLayout>
 </template>

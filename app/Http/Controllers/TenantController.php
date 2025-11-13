@@ -62,8 +62,12 @@ class TenantController extends Controller
             'sort_dir' => $sortDir,
         ]);
 
+        // Get stays for modal create/edit
+        $stays = Stay::with(['accommodation.property', 'category'])->get();
+
         return Inertia::render('Tenants/Index', [
             'tenants' => TenantResource::collection($tenants),
+            'stays' => StayResource::collection($stays),
             'search' => $search ?? '',
             'sort_by' => $sortBy,
             'sort_dir' => $sortDir,
@@ -130,7 +134,7 @@ class TenantController extends Controller
         $tenant->update($request->validated());
 
         return redirect()
-            ->route('tenants.show', $tenant)
+            ->route('tenants.index')
             ->with('success', 'Tenant updated successfully.');
     }
 

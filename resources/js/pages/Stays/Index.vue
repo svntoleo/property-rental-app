@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -14,6 +14,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ref, watch } from 'vue';
+import { useResourceModal } from '@/composables/useResourceModal';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import StayForm from '@/components/StayForm.vue';
+import StayView from '@/components/StayView.vue';
 
 interface Accommodation {
     id: number;
@@ -61,6 +65,8 @@ interface Props {
         data: Stay[];
         meta: PaginationMeta;
     };
+    accommodations: Accommodation[];
+    stayCategories: StayCategory[];
     search: string;
     sort_by?: string;
     sort_dir?: 'asc' | 'desc';
@@ -117,6 +123,17 @@ const deleteStay = (id: number) => {
         router.delete(`/stays/${id}`);
     }
 };
+
+// Modal state
+const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
+    useResourceModal<Stay>();
+
+const getModalTitle = () => {
+    if (mode.value === 'create') return 'Create Stay';
+    if (mode.value === 'edit') return 'Edit Stay';
+    return 'Stay Details';
+};
+
 </script>
 
 <template>
@@ -126,9 +143,7 @@ const deleteStay = (id: number) => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">Stays</h1>
-                <Link href="/stays/create">
-                    <Button>Create Stay</Button>
-                </Link>
+                <Button @click="openModal('create')">Create Stay</Button>
             </div>
 
             <div class="flex items-center gap-2">
@@ -203,16 +218,20 @@ const deleteStay = (id: number) => {
                             <TableCell>{{ formatCurrency(stay.price) }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Link :href="`/stays/${stay.id}`">
-                                        <Button variant="outline" size="sm"
-                                            >View</Button
-                                        >
-                                    </Link>
-                                    <Link :href="`/stays/${stay.id}/edit`">
-                                        <Button variant="outline" size="sm"
-                                            >Edit</Button
-                                        >
-                                    </Link>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('view', stay)"
+                                    >
+                                        View
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="openModal('edit', stay)"
+                                    >
+                                        Edit
+                                    </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -236,27 +255,38 @@ const deleteStay = (id: number) => {
                 v-if="stays.meta.last_page > 1"
                 class="mt-4 flex items-center justify-center gap-2"
             >
-                <Link
+                <Button
                     v-for="(link, index) in stays.meta.links"
                     :key="index"
-                    :href="link.url || '#'"
-                    :class="{
-                        'pointer-events-none': !link.url,
-                    }"
-                    :data="{
-                        ...(searchQuery ? { search: searchQuery } : {}),
-                        ...(sortBy ? { sort_by: sortBy } : {}),
-                        ...(sortBy ? { sort_dir: sortDir } : {}),
-                    }"
-                >
-                    <Button
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        v-html="link.label"
-                    />
-                </Link>
+                    :variant="link.active ? 'default' : 'outline'"
+                    size="sm"
+                    :disabled="!link.url"
+                    @click="
+                        link.url &&
+                            router.visit(link.url, {
+                                data: {
+                                    ...(searchQuery ? { search: searchQuery } : {}),
+                                    ...(sortBy ? { sort_by: sortBy } : {}),
+                                    ...(sortBy ? { sort_dir: sortDir } : {}),
+                                },
+                            })
+                    "
+                    v-html="link.label"
+                />
             </div>
         </div>
+
+        <!-- Unified Modal -->
+        <ResourceDialog :open="isOpen" :title="getModalTitle()" @close="closeModal">
+            <StayForm
+                v-if="mode === 'create' || mode === 'edit'"
+                :stay="entity ?? undefined"
+                :accommodations="accommodations"
+                :stay-categories="stayCategories"
+                :is-edit="mode === 'edit'"
+                @success="onSuccess"
+            />
+            <StayView v-else-if="mode === 'view'" :stay="entity!" />
+        </ResourceDialog>
     </AppLayout>
 </template>

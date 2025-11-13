@@ -76,8 +76,19 @@ class StayController extends Controller
             'sort_dir' => $sortDir,
         ]);
 
+        // Get accommodations and categories for modal create/edit
+        $accommodations = Accommodation::with('property:id,label')
+            ->whereHas('property', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+            ->whereNull('deleted_at')
+            ->get(['id', 'label', 'property_id']);
+        $stayCategories = StayCategory::all(['id', 'label']);
+
         return Inertia::render('Stays/Index', [
             'stays' => StayResource::collection($stays),
+            'accommodations' => AccommodationResource::collection($accommodations),
+            'stayCategories' => StayCategoryResource::collection($stayCategories),
             'search' => $search ?? '',
             'sort_by' => $sortBy,
             'sort_dir' => $sortDir,
@@ -150,7 +161,7 @@ class StayController extends Controller
         $stay->update($request->validated());
 
         return redirect()
-            ->route('stays.show', $stay)
+            ->route('stays.index')
             ->with('success', 'Stay updated successfully.');
     }
 

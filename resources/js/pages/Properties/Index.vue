@@ -2,6 +2,10 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
+import PropertyForm from '@/components/PropertyForm.vue';
+import PropertyView from '@/components/PropertyView.vue';
+import ResourceDialog from '@/components/ResourceDialog.vue';
+import { useResourceModal } from '@/composables/useResourceModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,6 +53,22 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// Modal state via composable
+const { isOpen, mode, entity, open, close, onSuccess } = useResourceModal<Property>();
+
+function openModal(m: 'create' | 'edit' | 'view', property: Property | null = null) {
+    open(m, property);
+}
+
+function closeModal() {
+    close();
+}
+
+function handleSuccess() {
+    onSuccess();
+    applyParams();
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -108,9 +128,7 @@ const deleteProperty = (id: number) => {
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold">Properties</h1>
-                <Link href="/properties/create">
-                    <Button>Create Property</Button>
-                </Link>
+                <Button @click="openModal('create')">Create Property</Button>
             </div>
 
             <div class="flex items-center gap-2">
@@ -160,18 +178,8 @@ const deleteProperty = (id: number) => {
                             }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
-                                    <Link :href="`/properties/${property.id}`">
-                                        <Button variant="outline" size="sm"
-                                            >View</Button
-                                        >
-                                    </Link>
-                                    <Link
-                                        :href="`/properties/${property.id}/edit`"
-                                    >
-                                        <Button variant="outline" size="sm"
-                                            >Edit</Button
-                                        >
-                                    </Link>
+                                    <Button variant="outline" size="sm" @click="openModal('view', property)">View</Button>
+                                    <Button variant="outline" size="sm" @click="openModal('edit', property)">Edit</Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -217,5 +225,27 @@ const deleteProperty = (id: number) => {
                 </Link>
             </div>
         </div>
+
+        <!-- Unified Modal for Create/Edit/View Property -->
+        <ResourceDialog
+            :open="isOpen"
+            :title="mode === 'create' ? 'Create Property' : mode === 'edit' ? 'Edit Property' : 'Property Details'"
+            @close="closeModal"
+        >
+            <!-- Form for Create/Edit -->
+            <PropertyForm
+                v-if="isOpen && (mode === 'create' || mode === 'edit')"
+                :property="(entity as any) || undefined"
+                :isEdit="mode === 'edit'"
+                @success="handleSuccess"
+                @cancel="closeModal"
+            />
+
+            <!-- View content -->
+            <PropertyView
+                v-if="isOpen && mode === 'view' && entity"
+                :property="entity as any"
+            />
+        </ResourceDialog>
     </AppLayout>
 </template>
