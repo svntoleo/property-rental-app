@@ -1,6 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
+
+use App\Http\Resources\ExpenseResource;
 
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\UpdatePropertyRequest;
@@ -83,11 +84,29 @@ class PropertyController extends Controller
         $property->load([
             'accommodations.stays.tenants',
             'accommodations.expenses.category',
-            'expenses.category',
         ]);
+
+
+        // Sorting for expenses
+        $sortBy = request('sort_by', 'label');
+        $sortDir = request('sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $allowedSorts = ['label', 'price', 'description'];
+        $sortBy = in_array($sortBy, $allowedSorts) ? $sortBy : 'label';
+
+        $expenses = $property->expenses()
+            ->with('category')
+            ->orderBy($sortBy, $sortDir)
+            ->paginate(10)
+            ->appends([
+                'sort_by' => $sortBy,
+                'sort_dir' => $sortDir,
+            ]);
 
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
+            'expenses' => ExpenseResource::collection($expenses),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ]);
     }
 
