@@ -81,26 +81,29 @@ class PropertyController extends Controller
      */
     public function show(Property $property)
     {
-        // Expenses search and sorting
+        // Expenses search and sorting (DRY via model scopes)
         $expenseSearch = request('expense_search');
         $expenseSortBy = request('expense_sort_by', 'date');
         $expenseSortDir = request('expense_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
-        $allowedExpenseSorts = ['label', 'price', 'date', 'description'];
+        $allowedExpenseSorts = \App\Models\Expense::allowedSorts();
+        // Add accommodation as allowed sort for this context
+        $allowedExpenseSorts = array_merge($allowedExpenseSorts, ['accommodation']);
         $expenseSortBy = in_array($expenseSortBy, $allowedExpenseSorts) ? $expenseSortBy : 'date';
 
-        $expenses = $property->expenses()
-            ->with('category')
-            ->when(!empty($expenseSearch), function ($query) use ($expenseSearch) {
-                $query->where(function ($q) use ($expenseSearch) {
-                    $q->where('label', 'like', "%{$expenseSearch}%")
-                        ->orWhere('description', 'like', "%{$expenseSearch}%")
-                        ->orWhereHas('category', function ($cat) use ($expenseSearch) {
-                            $cat->where('label', 'like', "%{$expenseSearch}%");
-                        });
-                });
-            })
-            ->orderBy($expenseSortBy, $expenseSortDir)
-            ->paginate(10, ['*'], 'expense_page')
+        $expensesQuery = $property->expenses()
+            ->with(['category', 'accommodation'])
+            ->search($expenseSearch);
+
+        // Handle accommodation sorting with leftJoin
+        if ($expenseSortBy === 'accommodation') {
+            $expensesQuery->leftJoin('accommodations', 'accommodations.id', '=', 'expenses.accommodation_id')
+                ->select('expenses.*')
+                ->orderBy('accommodations.label', $expenseSortDir);
+        } else {
+            $expensesQuery->sortBy($expenseSortBy, $expenseSortDir);
+        }
+
+        $expenses = $expensesQuery->paginate(10, ['*'], 'expense_page')
             ->appends([
                 'expense_search' => $expenseSearch,
                 'expense_sort_by' => $expenseSortBy,

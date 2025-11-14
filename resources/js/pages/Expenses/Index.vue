@@ -39,6 +39,7 @@ interface Expense {
     label: string;
     price: number;
     date: string;
+    is_current_month?: boolean;
     description: string | null;
     property: {
         id: number;
@@ -202,6 +203,12 @@ const expenseForModal = computed(() => {
                                 </button>
                             </TableHead>
                             <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('current_month')">
+                                    This Month
+                                    <span v-if="sortBy === 'current_month'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
                                 <button class="flex items-center gap-1" @click="toggleSort('description')">
                                     Description
                                     <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -225,6 +232,13 @@ const expenseForModal = computed(() => {
                             }}</TableCell>
                             <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
                             <TableCell>{{ formatDate(expense.date) }}</TableCell>
+                            <TableCell>
+                                <span v-if="expense.is_current_month"
+                                    class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
+                                    :class="'bg-blue-500/10 text-blue-500 border-blue-500/20'"
+                                >This month</span>
+                                <span v-else>-</span>
+                            </TableCell>
                             <TableCell>{{
                                 expense.description || '-'
                             }}</TableCell>
@@ -255,7 +269,7 @@ const expenseForModal = computed(() => {
                             </TableCell>
                         </TableRow>
                         <TableRow v-if="expenses.data.length === 0">
-                            <TableCell colspan="8" class="text-center">
+                            <TableCell colspan="9" class="text-center">
                                 No expenses found
                             </TableCell>
                         </TableRow>

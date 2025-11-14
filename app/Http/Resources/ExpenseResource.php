@@ -20,6 +20,7 @@ class ExpenseResource extends JsonResource
             'label' => $this->label,
             'price' => $this->price,
             'date' => $this->date?->format('Y-m-d'),
+            'is_current_month' => (bool) $this->is_current_month,
             'description' => $this->description,
             'deleted_at' => $this->deleted_at?->toIso8601String(),
         ];

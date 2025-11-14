@@ -50,8 +50,13 @@ interface Expense {
     label: string;
     price: number;
     date: string;
+    is_current_month?: boolean;
     description: string | null;
     category?: {
+        id: number;
+        label: string;
+    };
+    accommodation?: {
         id: number;
         label: string;
     };
@@ -695,6 +700,12 @@ const deleteProperty = () => {
                                     </TableHead>
                                     <TableHead>Category</TableHead>
                                     <TableHead>
+                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('accommodation')">
+                                            Accommodation
+                                            <span v-if="expenseSortBy === 'accommodation'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('price')">
                                             Price
                                             <span v-if="expenseSortBy === 'price'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -704,6 +715,12 @@ const deleteProperty = () => {
                                         <button class="flex items-center gap-1" @click="toggleExpenseSort('date')">
                                             Date
                                             <span v-if="expenseSortBy === 'date'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                        </button>
+                                    </TableHead>
+                                    <TableHead>
+                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('current_month')">
+                                            This Month
+                                            <span v-if="expenseSortBy === 'current_month'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
                                     <TableHead>
@@ -722,8 +739,16 @@ const deleteProperty = () => {
                                 >
                                     <TableCell>{{ expense.label }}</TableCell>
                                     <TableCell>{{ expense.category?.label || 'N/A' }}</TableCell>
+                                    <TableCell>{{ expense.accommodation?.label || '-' }}</TableCell>
                                     <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
                                     <TableCell>{{ formatDate(expense.date) }}</TableCell>
+                                    <TableCell>
+                                        <span v-if="expense.is_current_month"
+                                            class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
+                                            :class="'bg-blue-500/10 text-blue-500 border-blue-500/20'"
+                                        >This month</span>
+                                        <span v-else>-</span>
+                                    </TableCell>
                                     <TableCell>{{ expense.description || '-' }}</TableCell>
                                     <TableCell class="text-right">
                                         <Link :href="`/expenses/${expense.id}`">
@@ -734,7 +759,7 @@ const deleteProperty = () => {
                                     </TableCell>
                                 </TableRow>
                                 <TableRow v-if="expenses.data.length === 0">
-                                    <TableCell colspan="6" class="text-center">
+                                    <TableCell colspan="8" class="text-center">
                                         No expenses found
                                     </TableCell>
                                 </TableRow>

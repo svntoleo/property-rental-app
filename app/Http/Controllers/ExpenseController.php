@@ -22,47 +22,31 @@ class ExpenseController extends Controller
     public function index()
     {
         $search = request('search');
-        $sortBy = request('sort_by');
+        $sortBy = request('sort_by', 'date');
         $sortDir = request('sort_dir') === 'asc' ? 'asc' : 'desc';
 
-        $allowedSorts = [
-            'label' => 'expenses.label',
-            'description' => 'expenses.description',
-            'price' => 'expenses.price',
-            'date' => 'expenses.date',
-            'category' => 'expense_categories.label',
-            'property' => 'properties.label',
-            'accommodation' => 'accommodations.label',
-            'created_at' => 'expenses.created_at',
-        ];
+        $allowedSorts = \App\Models\Expense::allowedSorts();
+        // Add virtual sorts for joined tables
+        $allowedSorts = array_merge($allowedSorts, ['category', 'property', 'accommodation']);
+        $sortBy = in_array($sortBy, $allowedSorts) ? $sortBy : 'date';
 
         $query = Expense::with(['property', 'accommodation', 'category'])
-            ->when(!empty($search), function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('label', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhereHas('category', function ($cat) use ($search) {
-                            $cat->where('label', 'like', "%{$search}%");
-                        })
-                        ->orWhereHas('property', function ($prop) use ($search) {
-                            $prop->where('label', 'like', "%{$search}%");
-                        });
-                });
-            });
+            ->search($search);
 
-        if ($sortBy && isset($allowedSorts[$sortBy])) {
-            if (in_array($sortBy, ['category', 'property', 'accommodation'])) {
-                $query->leftJoin('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')
-                    ->leftJoin('properties', 'properties.id', '=', 'expenses.property_id')
-                    ->leftJoin('accommodations', 'accommodations.id', '=', 'expenses.accommodation_id')
-                    ->select('expenses.*')
-                    ->orderBy($allowedSorts[$sortBy], $sortDir);
-            } else {
-                $query->orderBy($allowedSorts[$sortBy], $sortDir);
-            }
+        // Handle sorting (including virtual joins for category/property/accommodation)
+        if (in_array($sortBy, ['category', 'property', 'accommodation'])) {
+            $query->leftJoin('expense_categories', 'expense_categories.id', '=', 'expenses.expense_category_id')
+                ->leftJoin('properties', 'properties.id', '=', 'expenses.property_id')
+                ->leftJoin('accommodations', 'accommodations.id', '=', 'expenses.accommodation_id')
+                ->select('expenses.*');
+            $sortMap = [
+                'category' => 'expense_categories.label',
+                'property' => 'properties.label',
+                'accommodation' => 'accommodations.label',
+            ];
+            $query->orderBy($sortMap[$sortBy], $sortDir);
         } else {
-            // Default: order by date descending (latest first)
-            $query->orderBy('expenses.date', 'desc')->orderBy('expenses.created_at', 'desc');
+            $query->sortBy($sortBy, $sortDir);
         }
 
         $expenses = $query->paginate(15)->appends([
