@@ -51,7 +51,7 @@ const props = defineProps<Props>();
 // Automatically extracts accommodation.label from props for breadcrumb
 const { breadcrumbs } = useBreadcrumbs();
 
-const { isOpen, open, close, entity, mode } = useResourceModal();
+const { isOpen, open, close, entity } = useResourceModal();
 
 const handleEditSuccess = () => {
     close();

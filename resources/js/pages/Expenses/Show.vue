@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -53,7 +52,7 @@ const props = defineProps<Props>();
 
 const { breadcrumbs } = useBreadcrumbs();
 
-const { isOpen, open, close, entity, mode } = useResourceModal();
+const { isOpen, open, close, entity } = useResourceModal();
 
 const handleEditSuccess = () => {
     close();

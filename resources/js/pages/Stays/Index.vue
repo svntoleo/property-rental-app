@@ -101,7 +101,7 @@ const toggleSort = (column: string) => {
 let debounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 // Debounced live search
-watch(searchQuery, (q) => {
+watch(searchQuery, () => {
     if (debounceHandle) clearTimeout(debounceHandle);
     debounceHandle = setTimeout(() => {
         applyParams();
@@ -256,8 +256,9 @@ const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
                                 },
                             })
                     "
-                    v-html="link.label"
-                />
+                >
+                    <span v-html="link.label" />
+                </Button>
             </div>
         </div>
 

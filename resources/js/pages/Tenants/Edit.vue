@@ -28,7 +28,7 @@ interface Tenant {
   cpf: string;
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   stays: Stay[];
   tenant?: Tenant;
 }>(), {
@@ -37,7 +37,11 @@ const props = withDefaults(defineProps<{
 });
 
 function closeModal() {
-  window.history.length > 1 ? window.history.back() : router.visit('/tenants');
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    router.visit('/tenants');
+  }
 }
 </script>
 

@@ -15,7 +15,6 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import {
-    BookOpen,
     Folder,
     LayoutGrid,
     Building2,

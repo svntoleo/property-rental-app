@@ -7,7 +7,6 @@ import HeadingSmall from '@/components/HeadingSmall.vue';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { edit } from '@/routes/appearance';
 
 const { breadcrumbs: breadcrumbItems } = useBreadcrumbs();
 </script>

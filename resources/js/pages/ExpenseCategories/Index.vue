@@ -44,7 +44,7 @@ interface Props {
     };
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const { breadcrumbs } = useBreadcrumbs();
 
@@ -121,8 +121,9 @@ const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
                     size="sm"
                     :disabled="!link.url"
                     @click="link.url && router.visit(link.url)"
-                    v-html="link.label"
-                />
+                >
+                    <span v-html="link.label" />
+                </Button>
             </div>
         </div>
 

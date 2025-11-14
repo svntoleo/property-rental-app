@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   open: boolean;
   title: string;
   contentClass?: string;

@@ -96,7 +96,7 @@ const toggleSort = (column: string) => {
 let debounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 // Debounced live search
-watch(searchQuery, (q) => {
+watch(searchQuery, () => {
     if (debounceHandle) clearTimeout(debounceHandle);
     debounceHandle = setTimeout(() => {
         applyParams();
@@ -211,8 +211,9 @@ const deleteProperty = (id: number) => {
                         :variant="link.active ? 'default' : 'outline'"
                         size="sm"
                         :disabled="!link.url"
-                        v-html="link.label"
-                    />
+                    >
+                        <span v-html="link.label" />
+                    </Button>
                 </Link>
             </div>
         </div>

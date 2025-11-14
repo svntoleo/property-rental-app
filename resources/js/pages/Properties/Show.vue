@@ -4,7 +4,6 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { computed } from 'vue';
 import { formatDate, formatCurrency } from '@/lib/format';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import PropertyForm from '@/components/PropertyForm.vue';
@@ -12,7 +11,6 @@ import { useResourceModal } from '@/composables/useResourceModal';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -335,7 +333,7 @@ watch(tenantSearchQuery, () => {
 const { breadcrumbs } = useBreadcrumbs();
 
 // Modal state for in-place edit
-const { isOpen, mode, entity, open, close, onSuccess } = useResourceModal<Property>();
+const { isOpen, entity, open, close, onSuccess } = useResourceModal<Property>();
 
 function openEditModal() {
     open('edit', props.property as unknown as Property);
@@ -545,8 +543,9 @@ const deleteProperty = () => {
                             :variant="link.active ? 'default' : 'outline'"
                             size="sm"
                             :disabled="!link.url"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -633,8 +632,9 @@ const deleteProperty = () => {
                             :variant="link.active ? 'default' : 'outline'"
                             size="sm"
                             :disabled="!link.url"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -725,8 +725,9 @@ const deleteProperty = () => {
                             :variant="link.active ? 'default' : 'outline'"
                             size="sm"
                             :disabled="!link.url"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -814,8 +815,9 @@ const deleteProperty = () => {
                             :variant="link.active ? 'default' : 'outline'"
                             size="sm"
                             :disabled="!link.url"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Button>
                     </Link>
                 </div>
             </div>

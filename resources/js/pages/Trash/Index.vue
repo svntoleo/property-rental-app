@@ -137,12 +137,9 @@ watch(currentTab, (newType) => {
 });
 
 // Handle search
-const handleSearch = () => {
-    applyParams({}, false);
-};
 
 // Debounced live search: triggers after user stops typing
-watch(searchQuery, (q) => {
+watch(searchQuery, () => {
     if (suppressSearchWatch.value) return;
     if (debounceHandle) clearTimeout(debounceHandle);
     debounceHandle = setTimeout(() => {
@@ -625,8 +622,9 @@ const formatDate = (date: string | null | undefined) => {
                         :variant="link.active ? 'default' : 'outline'"
                         size="sm"
                         :disabled="!link.url"
-                        v-html="link.label"
-                    />
+                    >
+                        <span v-html="link.label" />
+                    </Button>
                 </Link>
             </div>
         </div>

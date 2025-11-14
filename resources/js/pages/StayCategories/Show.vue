@@ -49,7 +49,7 @@ const props = defineProps<Props>();
 
 const { breadcrumbs } = useBreadcrumbs();
 
-const { isOpen, open, close, entity, mode } = useResourceModal();
+const { isOpen, open, close, entity } = useResourceModal();
 
 const handleEditSuccess = () => {
     close();

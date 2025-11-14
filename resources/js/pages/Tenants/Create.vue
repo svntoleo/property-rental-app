@@ -19,7 +19,7 @@ interface Stay {
   end_date: string;
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   stays: Stay[];
 }>(), {
   // Provide a safe default to avoid editor errors when this page isn't used
@@ -27,7 +27,11 @@ const props = withDefaults(defineProps<{
 });
 
 function closeModal() {
-  window.history.length > 1 ? window.history.back() : router.visit('/tenants');
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    router.visit('/tenants');
+  }
 }
 </script>
 

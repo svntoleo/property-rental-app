@@ -9,8 +9,6 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  show: Boolean
-});
+<script setup lang="ts">
+defineProps<{ show: boolean }>();
 </script>
