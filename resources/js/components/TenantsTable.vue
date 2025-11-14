@@ -8,9 +8,10 @@ interface Tenant {
     id: number;
     name: string;
     email: string;
-    cpf: string;
+    // Raw cpf/phone may not always be provided on list endpoints; mark optional
+    cpf?: string;
     cpf_formatted: string;
-    phone: string;
+    phone?: string;
     phone_formatted: string;
     stay: {
         id: number;

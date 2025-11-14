@@ -8,7 +8,7 @@ interface Stay {
     id: number;
     start_date: string;
     end_date: string;
-    due_date: number;
+    due_date: number | null;
     price: number;
     accommodation: {
         id: number;
@@ -22,7 +22,7 @@ interface Stay {
         id: number;
         label: string;
     };
-    tenants: any[];
+    tenants?: any[];
 }
 
 interface Props {

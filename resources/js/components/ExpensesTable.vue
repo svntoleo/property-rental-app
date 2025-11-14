@@ -14,7 +14,8 @@ interface Expense {
     category?: {
         id: number;
         label: string;
-    };
+    } | null;
+    // Property is normally always present for expenses; keep optional for flexibility
     property?: {
         id: number;
         label: string;
@@ -22,7 +23,7 @@ interface Expense {
     accommodation?: {
         id: number;
         label: string;
-    };
+    } | null;
 }
 
 interface Props {

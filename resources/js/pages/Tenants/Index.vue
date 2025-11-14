@@ -74,11 +74,12 @@ const stays = ref<Stay[]>(props.stays || []);
 
 const tableState = useTableState({
     resourceName: '',
-    defaults: { sortBy: '', sortDir: 'desc' },
+    defaultSortBy: props.sort_by || 'name',
+    defaultSortDir: (props.sort_dir as 'asc' | 'desc') || 'asc',
     currentUrl: '/tenants',
     initialSearch: props.search || '',
     initialSortBy: props.sort_by || '',
-    initialSortDir: props.sort_dir || 'desc',
+    initialSortDir: props.sort_dir || 'asc',
 });
 
 function openModal(m: 'create' | 'edit', tenant: Tenant | null = null) {
@@ -100,6 +101,9 @@ const deleteTenant = (id: number) => {
         router.delete(`/tenants/${id}`);
     }
 };
+function handleTenantEdit(tenant: any) {
+    openModal('edit', tenant);
+}
 </script>
 
 <template>
@@ -127,7 +131,7 @@ const deleteTenant = (id: number) => {
                     :sort-dir="tableState.sortDir.value"
                     show-stay-period
                     @sort="tableState.toggleSort"
-                    @edit="openModal('edit', $event)"
+                    @edit="handleTenantEdit"
                     @delete="deleteTenant"
                 />
             </div>

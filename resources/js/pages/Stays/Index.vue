@@ -70,7 +70,8 @@ const { breadcrumbs } = useBreadcrumbs();
 
 const tableState = useTableState({
     resourceName: '',
-    defaults: { sortBy: '', sortDir: 'desc' },
+    defaultSortBy: props.sort_by || 'start_date',
+    defaultSortDir: (props.sort_dir as 'asc' | 'desc') || 'desc',
     currentUrl: '/stays',
     initialSearch: props.search || '',
     initialSortBy: props.sort_by || '',
@@ -82,6 +83,9 @@ const deleteStay = (id: number) => {
         router.delete(`/stays/${id}`);
     }
 };
+function handleStayEdit(stay: any) {
+    openModal('edit', stay);
+}
 
 // Modal state
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
@@ -114,7 +118,7 @@ const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
                     :sort-dir="tableState.sortDir.value"
                     show-property
                     @sort="tableState.toggleSort"
-                    @edit="openModal('edit', $event)"
+                    @edit="handleStayEdit"
                     @delete="deleteStay"
                 />
             </div>

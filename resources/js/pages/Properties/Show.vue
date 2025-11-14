@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import { useTableState } from '@/composables/useTableState';
 import { Button } from '@/components/ui/button';
@@ -447,19 +447,13 @@ const deleteProperty = () => {
                         class="max-w-sm"
                     />
                 </div>
-                <Card>
-                    <CardContent class="p-0">
-                        <div class="overflow-x-auto">
-                            <ExpensesTable
-                                :data="expenses.data"
-                                :sort-by="expenseTable.sortBy.value"
-                                :sort-dir="expenseTable.sortDir.value"
-                                actions-type="view-only"
-                                @sort="expenseTable.toggleSort"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                <ExpensesTable
+                    :data="expenses.data"
+                    :sort-by="expenseTable.sortBy.value"
+                    :sort-dir="expenseTable.sortDir.value"
+                    actions-type="view-only"
+                    @sort="expenseTable.toggleSort"
+                />
 
                 <TablePagination
                     :links="expenses.meta.links"

@@ -85,7 +85,8 @@ const { breadcrumbs } = useBreadcrumbs();
 
 const tableState = useTableState({
     resourceName: '',
-    defaults: { sortBy: '', sortDir: 'desc' },
+    defaultSortBy: props.sort_by || 'date',
+    defaultSortDir: (props.sort_dir as 'asc' | 'desc') || 'desc',
     currentUrl: '/expenses',
     initialSearch: props.search || '',
     initialSortBy: props.sort_by || '',
@@ -97,6 +98,10 @@ const deleteExpense = (id: number) => {
         router.delete(`/expenses/${id}`);
     }
 };
+// Edit handler (cast to any to satisfy differing optional field shapes between table component and modal resource)
+function handleExpenseEdit(expense: any) {
+    openModal('edit', expense);
+}
 
 // Modal state
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
@@ -140,7 +145,7 @@ const expenseForModal = computed(() => {
                     show-property
                     show-accommodation
                     @sort="tableState.toggleSort"
-                    @edit="openModal('edit', $event)"
+                    @edit="handleExpenseEdit"
                     @delete="deleteExpense"
                 />
             </div>

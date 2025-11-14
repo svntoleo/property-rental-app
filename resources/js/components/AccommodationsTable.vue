@@ -17,8 +17,8 @@ interface Accommodation {
     active_stay_tenants?: number;
     active_stay_end_date?: string;
     active_stay_category?: string;
-    // Property is required in parent contexts (edit form needs property_id)
-    property: {
+    // Property can be absent on pages where accommodations are scoped to a single property (e.g. Property Show)
+    property?: {
         id: number;
         label: string;
     };
