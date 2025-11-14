@@ -37,6 +37,7 @@ interface Accommodation {
     is_occupied?: boolean;
     active_stay_tenants?: number;
     active_stay_end_date?: string;
+    active_stay_category?: string;
 }
 
 interface PaginationLink {
@@ -161,6 +162,12 @@ const accommodationForForm = computed(() => {
                                 </button>
                             </TableHead>
                             <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('category')">
+                                    Category
+                                    <span v-if="sortBy === 'category'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
                                 <button class="flex items-center gap-1" @click="toggleSort('status')">
                                     Status
                                     <span v-if="sortBy === 'status'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -182,6 +189,7 @@ const accommodationForForm = computed(() => {
                         >
                             <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
                             <TableCell>{{ accommodation.property.label }}</TableCell>
+                            <TableCell>{{ accommodation.is_occupied ? (accommodation.active_stay_category || '-') : '-' }}</TableCell>
                             <TableCell>
                                 <TooltipProvider v-if="accommodation.is_occupied && accommodation.active_stay_end_date">
                                     <Tooltip>

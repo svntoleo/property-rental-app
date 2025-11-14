@@ -42,6 +42,7 @@ interface Accommodation {
     is_occupied?: boolean;
     active_stay_tenants?: number;
     active_stay_end_date?: string;
+    active_stay_category?: string;
 }
 
 interface Expense {
@@ -488,6 +489,12 @@ const deleteProperty = () => {
                                     </button>
                                 </TableHead>
                                 <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('category')">
+                                        Category
+                                        <span v-if="accommodationSortBy === 'category'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
                                     <button class="flex items-center gap-1" @click="toggleAccommodationSort('status')">
                                         Status
                                         <span v-if="accommodationSortBy === 'status'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -508,6 +515,7 @@ const deleteProperty = () => {
                                 :key="accommodation.id"
                             >
                                 <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
+                                <TableCell>{{ accommodation.is_occupied ? (accommodation.active_stay_category || '-') : '-' }}</TableCell>
                                 <TableCell>
                                     <TooltipProvider v-if="accommodation.is_occupied && accommodation.active_stay_end_date">
                                         <Tooltip>

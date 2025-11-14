@@ -17,60 +17,23 @@ class AccommodationController extends Controller
      */
     public function index()
     {
-        $search = request('search');
-        $sortBy = request('sort_by');
+    $search = request('search');
+    $sortBy = request('sort_by', 'label');
         $sortDir = request('sort_dir') === 'asc' ? 'asc' : 'desc';
 
-        $allowedSorts = [
-            'label' => 'accommodations.label',
-            'property' => 'properties.label',
-            'created_at' => 'accommodations.created_at',
-            'status' => 'is_occupied',
-            'tenants' => 'active_tenants_count',
-        ];
+    $allowedSorts = \App\Models\Accommodation::allowedSorts();
 
-        $query = Accommodation::with([
+        $query = Accommodation::query()
+            ->with([
                 'property',
-                // Only load active stays for occupancy + tenant count
-                'stays' => function ($q) {
-                    $q->active()->withCount('tenants');
-                },
+                'activeStay.category',
+                'activeStay.tenants',
                 'expenses'
             ])
-            ->when(!empty($search), function ($query) use ($search) {
-                $query->where('label', 'like', "%{$search}%")
-                    ->orWhereHas('property', function ($q) use ($search) {
-                        $q->where('label', 'like', "%{$search}%");
-                    });
-            });
+            ->search($search);
 
-        if ($sortBy && isset($allowedSorts[$sortBy])) {
-            if ($sortBy === 'property') {
-                $query->leftJoin('properties', 'properties.id', '=', 'accommodations.property_id')
-                    ->select('accommodations.*')
-                    ->orderBy('properties.label', $sortDir);
-            } elseif ($sortBy === 'status' || $sortBy === 'tenants') {
-                // Subquery to calculate occupancy and tenant count for sorting
-                $query->leftJoin('stays', function ($join) {
-                    $join->on('stays.accommodation_id', '=', 'accommodations.id')
-                         ->where('stays.start_date', '<=', now())
-                         ->where('stays.end_date', '>=', now())
-                         ->whereNull('stays.deleted_at');
-                })
-                ->select('accommodations.*');
-                
-                if ($sortBy === 'status') {
-                    // Sort by whether there's an active stay (occupied = 1, free = 0)
-                    $query->orderByRaw('CASE WHEN stays.id IS NOT NULL THEN 1 ELSE 0 END ' . $sortDir);
-                } else {
-                    // Sort by tenant count of active stay
-                    $query->leftJoin('tenants', 'tenants.stay_id', '=', 'stays.id')
-                        ->groupBy('accommodations.id')
-                        ->orderByRaw('COUNT(DISTINCT tenants.id) ' . $sortDir);
-                }
-            } else {
-                $query->orderBy($allowedSorts[$sortBy], $sortDir);
-            }
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->sortBy($sortBy, $sortDir);
         } else {
             $query->latest();
         }
@@ -114,8 +77,8 @@ class AccommodationController extends Controller
     {
         $accommodation->load([
             'property',
-            'stays.tenants',
-            'stays.category',
+            'activeStay.category',
+            'activeStay.tenants',
             'expenses.category',
         ]);
 
@@ -126,37 +89,5 @@ class AccommodationController extends Controller
             'accommodation' => new AccommodationResource($accommodation),
             'properties' => PropertyResource::collection($properties),
         ]);
-    }
-
-    
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAccommodationRequest $request, Accommodation $accommodation)
-    {
-        $accommodation->update($request->validated());
-
-        if ($request->query('from') === 'show') {
-            return redirect()
-                ->route('accommodations.show', $accommodation)
-                ->with('success', 'Accommodation updated successfully.');
-        }
-
-        return redirect()
-            ->route('accommodations.index')
-            ->with('success', 'Accommodation updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Accommodation $accommodation)
-    {
-        $accommodation->delete();
-
-        return redirect()
-            ->route('accommodations.index')
-            ->with('success', 'Accommodation deleted successfully.');
     }
 }

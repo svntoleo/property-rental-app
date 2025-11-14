@@ -111,36 +111,20 @@ class PropertyController extends Controller
         $accommodationSearch = request('accommodation_search');
         $accommodationSortBy = request('accommodation_sort_by', 'label');
         $accommodationSortDir = request('accommodation_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
-        $allowedAccommodationSorts = ['label', 'status', 'tenants'];
+        $allowedAccommodationSorts = \App\Models\Accommodation::allowedSorts();
         $accommodationSortBy = in_array($accommodationSortBy, $allowedAccommodationSorts) ? $accommodationSortBy : 'label';
 
         $accommodations = $property->accommodations()
-            ->with(['stays' => function ($q) {
-                $q->active()->withCount('tenants');
-            }])
-            ->when(!empty($accommodationSearch), function ($query) use ($accommodationSearch) {
-                $query->where('label', 'like', "%{$accommodationSearch}%");
-            });
-            
-        if ($accommodationSortBy === 'status' || $accommodationSortBy === 'tenants') {
-            // Subquery joins for sorting by occupancy/tenant count
-            $accommodations->leftJoin('stays', function ($join) {
-                $join->on('stays.accommodation_id', '=', 'accommodations.id')
-                     ->where('stays.start_date', '<=', now())
-                     ->where('stays.end_date', '>=', now())
-                     ->whereNull('stays.deleted_at');
-            })
-            ->select('accommodations.*');
-            
-            if ($accommodationSortBy === 'status') {
-                $accommodations->orderByRaw('CASE WHEN stays.id IS NOT NULL THEN 1 ELSE 0 END ' . $accommodationSortDir);
-            } else {
-                $accommodations->leftJoin('tenants', 'tenants.stay_id', '=', 'stays.id')
-                    ->groupBy('accommodations.id')
-                    ->orderByRaw('COUNT(DISTINCT tenants.id) ' . $accommodationSortDir);
-            }
+            ->with([
+                'activeStay.category',
+                'activeStay.tenants'
+            ])
+            ->search($accommodationSearch);
+
+        if (in_array($accommodationSortBy, $allowedAccommodationSorts)) {
+            $accommodations->sortBy($accommodationSortBy, $accommodationSortDir);
         } else {
-            $accommodations->orderBy($accommodationSortBy, $accommodationSortDir);
+            $accommodations->latest();
         }
         
         $accommodations = $accommodations->paginate(10, ['*'], 'accommodation_page')
@@ -221,8 +205,6 @@ class PropertyController extends Controller
         $expectedExpenses = Expense::where('property_id', $property->id)
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->sum('price');
-
-        // Yearly financial stats removed per request
 
         // Count of free accommodations (no active stay right now)
         $freeAccommodations = $property->accommodations()
