@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatDate, formatCurrency } from '@/lib/format';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { ref, watch, computed } from 'vue';
+import { computed } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import { useTableState } from '@/composables/useTableState';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import ExpenseForm from '@/components/ExpenseForm.vue';
+import ExpensesTable from '@/components/ExpensesTable.vue';
+import TablePagination from '@/components/TablePagination.vue';
 
 interface Property {
     id: number;
@@ -89,37 +83,13 @@ const props = defineProps<Props>();
 
 const { breadcrumbs } = useBreadcrumbs();
 
-const searchQuery = ref(props.search || '');
-const sortBy = ref<string>(props.sort_by || '');
-const sortDir = ref<'asc' | 'desc'>(props.sort_dir || 'desc');
-const applyParams = (extra: Record<string, any> = {}) => {
-    const params: Record<string, any> = {};
-    if (searchQuery.value) params.search = searchQuery.value;
-    if (sortBy.value) {
-        params.sort_by = sortBy.value;
-        params.sort_dir = sortDir.value;
-    }
-    Object.assign(params, extra);
-    router.get('/expenses', params, { preserveState: true, replace: true });
-};
-
-const toggleSort = (column: string) => {
-    if (sortBy.value === column) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortBy.value = column;
-        sortDir.value = 'asc';
-    }
-    applyParams();
-};
-let debounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-// Debounced live search
-watch(searchQuery, () => {
-    if (debounceHandle) clearTimeout(debounceHandle);
-    debounceHandle = setTimeout(() => {
-        applyParams();
-    }, 350);
+const tableState = useTableState({
+    resourceName: '',
+    defaults: { sortBy: '', sortDir: 'desc' },
+    currentUrl: '/expenses',
+    initialSearch: props.search || '',
+    initialSortBy: props.sort_by || '',
+    initialSortDir: props.sort_dir || 'desc',
 });
 
 const deleteExpense = (id: number) => {
@@ -156,152 +126,30 @@ const expenseForModal = computed(() => {
 
             <div class="flex items-center gap-2">
                 <Input
-                    v-model="searchQuery"
+                    v-model="tableState.searchQuery.value"
                     placeholder="Search expenses..."
                     class="max-w-sm"
                 />
             </div>
 
             <div class="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('label')">
-                                    Label
-                                    <span v-if="sortBy === 'label'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('category')">
-                                    Category
-                                    <span v-if="sortBy === 'category'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('property')">
-                                    Property
-                                    <span v-if="sortBy === 'property'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('accommodation')">
-                                    Accommodation
-                                    <span v-if="sortBy === 'accommodation'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('price')">
-                                    Price
-                                    <span v-if="sortBy === 'price'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('date')">
-                                    Date
-                                    <span v-if="sortBy === 'date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('current_month')">
-                                    This Month
-                                    <span v-if="sortBy === 'current_month'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('description')">
-                                    Description
-                                    <span v-if="sortBy === 'description'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead class="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow
-                            v-for="expense in expenses.data"
-                            :key="expense.id"
-                        >
-                            <TableCell class="font-medium">{{
-                                expense.label
-                            }}</TableCell>
-                            <TableCell>{{ expense.category?.label || '-' }}</TableCell>
-                            <TableCell>{{ expense.property.label }}</TableCell>
-                            <TableCell>{{
-                                expense.accommodation?.label || '-'
-                            }}</TableCell>
-                            <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
-                            <TableCell>{{ formatDate(expense.date) }}</TableCell>
-                            <TableCell>
-                                <span v-if="expense.is_current_month"
-                                    class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
-                                    :class="'bg-blue-500/10 text-blue-500 border-blue-500/20'"
-                                >This month</span>
-                                <span v-else>-</span>
-                            </TableCell>
-                            <TableCell>{{
-                                expense.description || '-'
-                            }}</TableCell>
-                            <TableCell class="text-right">
-                                <div class="flex justify-end gap-2">
-                                    <Link :href="`/expenses/${expense.id}`">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            View
-                                        </Button>
-                                    </Link>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('edit', expense)"
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="deleteExpense(expense.id)"
-                                        >Delete</Button
-                                    >
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow v-if="expenses.data.length === 0">
-                            <TableCell colspan="9" class="text-center">
-                                No expenses found
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <ExpensesTable
+                    :data="expenses.data"
+                    :sort-by="tableState.sortBy.value"
+                    :sort-dir="tableState.sortDir.value"
+                    show-property
+                    show-accommodation
+                    @sort="tableState.toggleSort"
+                    @edit="openModal('edit', $event)"
+                    @delete="deleteExpense"
+                />
             </div>
 
-            <!-- Pagination -->
-            <div
+            <TablePagination
                 v-if="expenses.meta.last_page > 1"
-                class="mt-4 flex items-center justify-center gap-2"
-            >
-                <Button
-                    v-for="(link, index) in expenses.meta.links"
-                    :key="index"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="
-                        link.url &&
-                            router.visit(link.url, {
-                                data: {
-                                    ...(searchQuery ? { search: searchQuery } : {}),
-                                    ...(sortBy ? { sort_by: sortBy } : {}),
-                                    ...(sortBy ? { sort_dir: sortDir } : {}),
-                                },
-                            })
-                    "
-                >
-                    <span v-html="link.label" />
-                </Button>
-            </div>
+                :links="expenses.meta.links"
+                :last-page="expenses.meta.last_page"
+            />
         </div>
 
         <!-- Unified Modal for Create/Edit -->

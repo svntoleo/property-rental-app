@@ -1,33 +1,25 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import { useTableState } from '@/composables/useTableState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatDate, formatCurrency } from '@/lib/format';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import PropertyForm from '@/components/PropertyForm.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
+import AccommodationsTable from '@/components/AccommodationsTable.vue';
+import ExpensesTable from '@/components/ExpensesTable.vue';
+import StaysTable from '@/components/StaysTable.vue';
+import TenantsTable from '@/components/TenantsTable.vue';
+import TablePagination from '@/components/TablePagination.vue';
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 
 interface Property {
     id: number;
@@ -70,11 +62,17 @@ interface Tenant {
     cpf_formatted: string;
     phone: string;
     phone_formatted: string;
-    stay?: {
+    stay: {
         id: number;
+        start_date: string;
+        end_date: string;
         accommodation: {
             id: number;
             label: string;
+            property: {
+                id: number;
+                label: string;
+            };
         };
     };
 }
@@ -148,199 +146,91 @@ interface Props {
     expected_month_profit: number;
     free_accommodations: number;
 }
-
-
 const props = defineProps<Props>();
 
-import { ref, watch } from 'vue';
-import { router as inertiaRouter } from '@inertiajs/vue3';
-
-// Expenses search and sorting
-const expenseSearchQuery = ref(props.expense_search || '');
-const expenseSortBy = ref(props.expense_sort_by || 'date');
-const expenseSortDir = ref(props.expense_sort_dir || 'desc');
-
-let expenseDebounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-function applyExpenseParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {
-        // Preserve accommodation params
+// Table state management using composable
+const expenseTable = useTableState({
+    resourceName: 'expense',
+    defaultSortBy: 'date',
+    defaultSortDir: 'desc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.expense_search,
+    initialSortBy: props.expense_sort_by,
+    initialSortDir: props.expense_sort_dir,
+    preserveParams: {
         accommodation_search: props.accommodation_search,
         accommodation_sort_by: props.accommodation_sort_by,
         accommodation_sort_dir: props.accommodation_sort_dir,
-        // Preserve stay params
         stay_search: props.stay_search,
         stay_sort_by: props.stay_sort_by,
         stay_sort_dir: props.stay_sort_dir,
-        // Preserve tenant params
         tenant_search: props.tenant_search,
         tenant_sort_by: props.tenant_sort_by,
         tenant_sort_dir: props.tenant_sort_dir,
-        // Set expense params
-        expense_search: expenseSearchQuery.value || undefined,
-        expense_sort_by: expenseSortBy.value,
-        expense_sort_dir: expenseSortDir.value,
-        ...extra,
-    };
-    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
-}
-
-function toggleExpenseSort(column: string) {
-    if (expenseSortBy.value === column) {
-        expenseSortDir.value = expenseSortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        expenseSortBy.value = column;
-        expenseSortDir.value = 'asc';
-    }
-    applyExpenseParams();
-}
-
-watch(expenseSearchQuery, () => {
-    if (expenseDebounceHandle) clearTimeout(expenseDebounceHandle);
-    expenseDebounceHandle = setTimeout(() => {
-        applyExpenseParams();
-    }, 350);
+    },
 });
 
-// Accommodations search and sorting
-const accommodationSearchQuery = ref(props.accommodation_search || '');
-const accommodationSortBy = ref(props.accommodation_sort_by || 'label');
-const accommodationSortDir = ref(props.accommodation_sort_dir || 'asc');
-
-let accommodationDebounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-function applyAccommodationParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {
-        // Preserve expense params
+const accommodationTable = useTableState({
+    resourceName: 'accommodation',
+    defaultSortBy: 'label',
+    defaultSortDir: 'asc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.accommodation_search,
+    initialSortBy: props.accommodation_sort_by,
+    initialSortDir: props.accommodation_sort_dir,
+    preserveParams: {
         expense_search: props.expense_search,
         expense_sort_by: props.expense_sort_by,
         expense_sort_dir: props.expense_sort_dir,
-        // Preserve stay params
         stay_search: props.stay_search,
         stay_sort_by: props.stay_sort_by,
         stay_sort_dir: props.stay_sort_dir,
-        // Preserve tenant params
         tenant_search: props.tenant_search,
         tenant_sort_by: props.tenant_sort_by,
         tenant_sort_dir: props.tenant_sort_dir,
-        // Set accommodation params
-        accommodation_search: accommodationSearchQuery.value || undefined,
-        accommodation_sort_by: accommodationSortBy.value,
-        accommodation_sort_dir: accommodationSortDir.value,
-        ...extra,
-    };
-    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
-}
-
-function toggleAccommodationSort(column: string) {
-    if (accommodationSortBy.value === column) {
-        accommodationSortDir.value = accommodationSortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        accommodationSortBy.value = column;
-        accommodationSortDir.value = 'asc';
-    }
-    applyAccommodationParams();
-}
-
-watch(accommodationSearchQuery, () => {
-    if (accommodationDebounceHandle) clearTimeout(accommodationDebounceHandle);
-    accommodationDebounceHandle = setTimeout(() => {
-        applyAccommodationParams();
-    }, 350);
+    },
 });
 
-// Stays search and sorting
-const staySearchQuery = ref(props.stay_search || '');
-const staySortBy = ref(props.stay_sort_by || 'start_date');
-const staySortDir = ref(props.stay_sort_dir || 'desc');
-
-let stayDebounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-function applyStayParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {
-        // Preserve expense params
+const stayTable = useTableState({
+    resourceName: 'stay',
+    defaultSortBy: 'start_date',
+    defaultSortDir: 'desc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.stay_search,
+    initialSortBy: props.stay_sort_by,
+    initialSortDir: props.stay_sort_dir,
+    preserveParams: {
         expense_search: props.expense_search,
         expense_sort_by: props.expense_sort_by,
         expense_sort_dir: props.expense_sort_dir,
-        // Preserve accommodation params
         accommodation_search: props.accommodation_search,
         accommodation_sort_by: props.accommodation_sort_by,
         accommodation_sort_dir: props.accommodation_sort_dir,
-        // Preserve tenant params
         tenant_search: props.tenant_search,
         tenant_sort_by: props.tenant_sort_by,
         tenant_sort_dir: props.tenant_sort_dir,
-        // Set stay params
-        stay_search: staySearchQuery.value || undefined,
-        stay_sort_by: staySortBy.value,
-        stay_sort_dir: staySortDir.value,
-        ...extra,
-    };
-    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
-}
-
-function toggleStaySort(column: string) {
-    if (staySortBy.value === column) {
-        staySortDir.value = staySortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        staySortBy.value = column;
-        staySortDir.value = 'asc';
-    }
-    applyStayParams();
-}
-
-watch(staySearchQuery, () => {
-    if (stayDebounceHandle) clearTimeout(stayDebounceHandle);
-    stayDebounceHandle = setTimeout(() => {
-        applyStayParams();
-    }, 350);
+    },
 });
 
-// Tenants search and sorting
-const tenantSearchQuery = ref(props.tenant_search || '');
-const tenantSortBy = ref(props.tenant_sort_by || 'name');
-const tenantSortDir = ref(props.tenant_sort_dir || 'asc');
-
-let tenantDebounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-function applyTenantParams(extra: Record<string, any> = {}) {
-    const params: Record<string, any> = {
-        // Preserve expense params
+const tenantTable = useTableState({
+    resourceName: 'tenant',
+    defaultSortBy: 'name',
+    defaultSortDir: 'asc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.tenant_search,
+    initialSortBy: props.tenant_sort_by,
+    initialSortDir: props.tenant_sort_dir,
+    preserveParams: {
         expense_search: props.expense_search,
         expense_sort_by: props.expense_sort_by,
         expense_sort_dir: props.expense_sort_dir,
-        // Preserve accommodation params
         accommodation_search: props.accommodation_search,
         accommodation_sort_by: props.accommodation_sort_by,
         accommodation_sort_dir: props.accommodation_sort_dir,
-        // Preserve stay params
         stay_search: props.stay_search,
         stay_sort_by: props.stay_sort_by,
         stay_sort_dir: props.stay_sort_dir,
-        // Set tenant params
-        tenant_search: tenantSearchQuery.value || undefined,
-        tenant_sort_by: tenantSortBy.value,
-        tenant_sort_dir: tenantSortDir.value,
-        ...extra,
-    };
-    inertiaRouter.get(`/properties/${props.property.id}`, params, { preserveScroll: true, preserveState: true });
-}
-
-function toggleTenantSort(column: string) {
-    if (tenantSortBy.value === column) {
-        tenantSortDir.value = tenantSortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        tenantSortBy.value = column;
-        tenantSortDir.value = 'asc';
-    }
-    applyTenantParams();
-}
-
-watch(tenantSearchQuery, () => {
-    if (tenantDebounceHandle) clearTimeout(tenantDebounceHandle);
-    tenantDebounceHandle = setTimeout(() => {
-        applyTenantParams();
-    }, 350);
+    },
 });
 
 const { breadcrumbs } = useBreadcrumbs();
@@ -477,114 +367,24 @@ const deleteProperty = () => {
                 
                 <div class="flex items-center gap-2">
                     <Input
-                        v-model="accommodationSearchQuery"
+                        v-model="accommodationTable.searchQuery.value"
                         placeholder="Search accommodations..."
                         class="max-w-sm"
                     />
                 </div>
 
-                <div class="rounded-md border overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('label')">
-                                        Label
-                                        <span v-if="accommodationSortBy === 'label'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('category')">
-                                        Category
-                                        <span v-if="accommodationSortBy === 'category'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('status')">
-                                        Status
-                                        <span v-if="accommodationSortBy === 'status'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('tenants')">
-                                        Tenants
-                                        <span v-if="accommodationSortBy === 'tenants'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="accommodation in accommodations.data"
-                                :key="accommodation.id"
-                            >
-                                <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
-                                <TableCell>{{ accommodation.is_occupied ? (accommodation.active_stay_category || '-') : '-' }}</TableCell>
-                                <TableCell>
-                                    <TooltipProvider v-if="accommodation.is_occupied && accommodation.active_stay_end_date">
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <span
-                                                    class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium cursor-help"
-                                                    :class="accommodation.is_occupied
-                                                        ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                        : 'bg-green-500/10 text-green-500 border-green-500/20'"
-                                                >
-                                                    {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Ends: {{ formatDate(accommodation.active_stay_end_date) }}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <span
-                                        v-else
-                                        class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
-                                        :class="accommodation.is_occupied
-                                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                            : 'bg-green-500/10 text-green-500 border-green-500/20'"
-                                    >
-                                        {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
-                                    </span>
-                                </TableCell>
-                                <TableCell>{{ accommodation.is_occupied ? accommodation.active_stay_tenants : '-' }}</TableCell>
-                                <TableCell class="text-right">
-                                    <Link :href="`/accommodations/${accommodation.id}`">
-                                        <Button variant="outline" size="sm">View Details</Button>
-                                    </Link>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="accommodations.data.length === 0">
-                                <TableCell colspan="5" class="text-center">
-                                    No accommodations found
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                <AccommodationsTable
+                    :data="accommodations.data"
+                    :sort-by="accommodationTable.sortBy.value"
+                    :sort-dir="accommodationTable.sortDir.value"
+                    actions-type="view-only"
+                    @sort="accommodationTable.toggleSort"
+                />
 
-                <!-- Pagination -->
-                <div
-                    v-if="accommodations.meta.last_page > 1"
-                    class="mt-4 flex items-center justify-center gap-2"
-                >
-                    <Link
-                        v-for="(link, index) in accommodations.meta.links"
-                        :key="index"
-                        :href="link.url || '#'"
-                        preserve-scroll
-                    >
-                        <Button
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                        >
-                            <span v-html="link.label" />
-                        </Button>
-                    </Link>
-                </div>
+                <TablePagination
+                    :links="accommodations.meta.links"
+                    :last-page="accommodations.meta.last_page"
+                />
             </div>
 
             <div v-if="stays.data.length > 0" class="grid gap-4">
@@ -592,203 +392,24 @@ const deleteProperty = () => {
                 
                 <div class="flex items-center gap-2">
                     <Input
-                        v-model="staySearchQuery"
+                        v-model="stayTable.searchQuery.value"
                         placeholder="Search stays..."
                         class="max-w-sm"
                     />
                 </div>
 
-                <div class="rounded-md border overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Accommodation</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleStaySort('start_date')">
-                                        Start Date
-                                        <span v-if="staySortBy === 'start_date'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleStaySort('end_date')">
-                                        End Date
-                                        <span v-if="staySortBy === 'end_date'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>Due Day</TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleStaySort('price')">
-                                        Price
-                                        <span v-if="staySortBy === 'price'">{{ staySortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>Tenants</TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="stay in stays.data"
-                                :key="stay.id"
-                            >
-                                <TableCell class="font-medium">{{ stay.accommodation.label }}</TableCell>
-                                <TableCell>{{ stay.category.label }}</TableCell>
-                                <TableCell>{{ formatDate(stay.start_date) }}</TableCell>
-                                <TableCell>{{ formatDate(stay.end_date) }}</TableCell>
-                                <TableCell>{{ stay.due_date }}</TableCell>
-                                <TableCell>{{ formatCurrency(stay.price) }}</TableCell>
-                                <TableCell>{{ stay.tenants.length }}</TableCell>
-                                <TableCell class="text-right">
-                                    <Link :href="`/stays/${stay.id}`">
-                                        <Button variant="outline" size="sm">View Details</Button>
-                                    </Link>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="stays.data.length === 0">
-                                <TableCell colspan="8" class="text-center">
-                                    No active stays found
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                <StaysTable
+                    :data="stays.data"
+                    :sort-by="stayTable.sortBy.value"
+                    :sort-dir="stayTable.sortDir.value"
+                    actions-type="view-only"
+                    @sort="stayTable.toggleSort"
+                />
 
-                <!-- Pagination -->
-                <div
-                    v-if="stays.meta.last_page > 1"
-                    class="mt-4 flex items-center justify-center gap-2"
-                >
-                    <Link
-                        v-for="(link, index) in stays.meta.links"
-                        :key="index"
-                        :href="link.url || '#'"
-                        preserve-scroll
-                    >
-                        <Button
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                        >
-                            <span v-html="link.label" />
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-
-            <div v-if="expenses.data.length > 0" class="grid gap-4">
-                <h2 class="text-xl font-semibold">Expenses</h2>
-                
-                <div class="flex items-center gap-2">
-                    <Input
-                        v-model="expenseSearchQuery"
-                        placeholder="Search expenses..."
-                        class="max-w-sm"
-                    />
-                </div>
-                <Card>
-                    <CardContent class="p-0">
-                        <div class="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('label')">
-                                            Label
-                                            <span v-if="expenseSortBy === 'label'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('accommodation')">
-                                            Accommodation
-                                            <span v-if="expenseSortBy === 'accommodation'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('price')">
-                                            Price
-                                            <span v-if="expenseSortBy === 'price'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('date')">
-                                            Date
-                                            <span v-if="expenseSortBy === 'date'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('current_month')">
-                                            This Month
-                                            <span v-if="expenseSortBy === 'current_month'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead>
-                                        <button class="flex items-center gap-1" @click="toggleExpenseSort('description')">
-                                            Description
-                                            <span v-if="expenseSortBy === 'description'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                        </button>
-                                    </TableHead>
-                                    <TableHead class="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow
-                                    v-for="expense in expenses.data"
-                                    :key="expense.id"
-                                >
-                                    <TableCell>{{ expense.label }}</TableCell>
-                                    <TableCell>{{ expense.category?.label || 'N/A' }}</TableCell>
-                                    <TableCell>{{ expense.accommodation?.label || '-' }}</TableCell>
-                                    <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
-                                    <TableCell>{{ formatDate(expense.date) }}</TableCell>
-                                    <TableCell>
-                                        <span v-if="expense.is_current_month"
-                                            class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
-                                            :class="'bg-blue-500/10 text-blue-500 border-blue-500/20'"
-                                        >This month</span>
-                                        <span v-else>-</span>
-                                    </TableCell>
-                                    <TableCell>{{ expense.description || '-' }}</TableCell>
-                                    <TableCell class="text-right">
-                                        <Link :href="`/expenses/${expense.id}`">
-                                            <Button variant="outline" size="sm"
-                                                >View Details</Button
-                                            >
-                                        </Link>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow v-if="expenses.data.length === 0">
-                                    <TableCell colspan="8" class="text-center">
-                                        No expenses found
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <!-- Pagination -->
-                <div
-                    v-if="expenses.meta.last_page > 1"
-                    class="mt-4 flex items-center justify-center gap-2"
-                >
-                    <Link
-                        v-for="(link, index) in expenses.meta.links"
-                        :key="index"
-                        :href="link.url || '#'"
-                        preserve-scroll
-                    >
-                        <Button
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                        >
-                            <span v-html="link.label" />
-                        </Button>
-                    </Link>
-                </div>
+                <TablePagination
+                    :links="stays.meta.links"
+                    :last-page="stays.meta.last_page"
+                />
             </div>
 
             <div v-if="tenants.data.length > 0" class="grid gap-4">
@@ -796,89 +417,54 @@ const deleteProperty = () => {
                 
                 <div class="flex items-center gap-2">
                     <Input
-                        v-model="tenantSearchQuery"
+                        v-model="tenantTable.searchQuery.value"
                         placeholder="Search tenants..."
                         class="max-w-sm"
                     />
                 </div>
 
-                <div class="rounded-md border overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleTenantSort('name')">
-                                        Name
-                                        <span v-if="tenantSortBy === 'name'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleTenantSort('email')">
-                                        Email
-                                        <span v-if="tenantSortBy === 'email'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleTenantSort('cpf')">
-                                        CPF
-                                        <span v-if="tenantSortBy === 'cpf'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>
-                                    <button class="flex items-center gap-1" @click="toggleTenantSort('phone')">
-                                        Phone
-                                        <span v-if="tenantSortBy === 'phone'">{{ tenantSortDir === 'asc' ? '▲' : '▼' }}</span>
-                                    </button>
-                                </TableHead>
-                                <TableHead>Accommodation</TableHead>
-                                <TableHead class="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="tenant in tenants.data"
-                                :key="tenant.id"
-                            >
-                                <TableCell class="font-medium">{{ tenant.name }}</TableCell>
-                                <TableCell>{{ tenant.email }}</TableCell>
-                                <TableCell>{{ tenant.cpf_formatted }}</TableCell>
-                                <TableCell>{{ tenant.phone_formatted }}</TableCell>
-                                <TableCell>{{ tenant.stay?.accommodation.label || '-' }}</TableCell>
-                                <TableCell class="text-right">
-                                    <Link :href="`/tenants/${tenant.id}`">
-                                        <Button variant="outline" size="sm">View Details</Button>
-                                    </Link>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="tenants.data.length === 0">
-                                <TableCell colspan="6" class="text-center">
-                                    No tenants found
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                <TenantsTable
+                    :data="tenants.data"
+                    :sort-by="tenantTable.sortBy.value"
+                    :sort-dir="tenantTable.sortDir.value"
+                    actions-type="view-only"
+                    @sort="tenantTable.toggleSort"
+                />
 
-                <!-- Pagination -->
-                <div
-                    v-if="tenants.meta.last_page > 1"
-                    class="mt-4 flex items-center justify-center gap-2"
-                >
-                    <Link
-                        v-for="(link, index) in tenants.meta.links"
-                        :key="index"
-                        :href="link.url || '#'"
-                        preserve-scroll
-                    >
-                        <Button
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                        >
-                            <span v-html="link.label" />
-                        </Button>
-                    </Link>
+                <TablePagination
+                    :links="tenants.meta.links"
+                    :last-page="tenants.meta.last_page"
+                />
+            </div>
+
+            <div v-if="expenses.data.length > 0" class="grid gap-4">
+                <h2 class="text-xl font-semibold">Expenses</h2>
+                
+                <div class="flex items-center gap-2">
+                    <Input
+                        v-model="expenseTable.searchQuery.value"
+                        placeholder="Search expenses..."
+                        class="max-w-sm"
+                    />
                 </div>
+                <Card>
+                    <CardContent class="p-0">
+                        <div class="overflow-x-auto">
+                            <ExpensesTable
+                                :data="expenses.data"
+                                :sort-by="expenseTable.sortBy.value"
+                                :sort-dir="expenseTable.sortDir.value"
+                                actions-type="view-only"
+                                @sort="expenseTable.toggleSort"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <TablePagination
+                    :links="expenses.meta.links"
+                    :last-page="expenses.meta.last_page"
+                />
             </div>
         </div>
     </AppLayout>

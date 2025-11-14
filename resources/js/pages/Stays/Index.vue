@@ -1,22 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatCurrency, formatDate } from '@/lib/format';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { ref, watch } from 'vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
+import { useTableState } from '@/composables/useTableState';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import StayForm from '@/components/StayForm.vue';
+import StaysTable from '@/components/StaysTable.vue';
+import TablePagination from '@/components/TablePagination.vue';
 
 interface Accommodation {
     id: number;
@@ -75,37 +68,13 @@ const props = defineProps<Props>();
 
 const { breadcrumbs } = useBreadcrumbs();
 
-const searchQuery = ref(props.search || '');
-const sortBy = ref<string>(props.sort_by || '');
-const sortDir = ref<'asc' | 'desc'>(props.sort_dir || 'desc');
-const applyParams = (extra: Record<string, any> = {}) => {
-    const params: Record<string, any> = {};
-    if (searchQuery.value) params.search = searchQuery.value;
-    if (sortBy.value) {
-        params.sort_by = sortBy.value;
-        params.sort_dir = sortDir.value;
-    }
-    Object.assign(params, extra);
-    router.get('/stays', params, { preserveState: true, replace: true });
-};
-
-const toggleSort = (column: string) => {
-    if (sortBy.value === column) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortBy.value = column;
-        sortDir.value = 'asc';
-    }
-    applyParams();
-};
-let debounceHandle: ReturnType<typeof setTimeout> | undefined;
-
-// Debounced live search
-watch(searchQuery, () => {
-    if (debounceHandle) clearTimeout(debounceHandle);
-    debounceHandle = setTimeout(() => {
-        applyParams();
-    }, 350);
+const tableState = useTableState({
+    resourceName: '',
+    defaults: { sortBy: '', sortDir: 'desc' },
+    currentUrl: '/stays',
+    initialSearch: props.search || '',
+    initialSortBy: props.sort_by || '',
+    initialSortDir: props.sort_dir || 'desc',
 });
 
 const deleteStay = (id: number) => {
@@ -132,134 +101,29 @@ const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
 
             <div class="flex items-center gap-2">
                 <Input
-                    v-model="searchQuery"
+                    v-model="tableState.searchQuery.value"
                     placeholder="Search stays..."
                     class="max-w-sm"
                 />
             </div>
 
             <div class="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('category')">
-                                    Category
-                                    <span v-if="sortBy === 'category'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('property')">
-                                    Property
-                                    <span v-if="sortBy === 'property'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('accommodation')">
-                                    Accommodation
-                                    <span v-if="sortBy === 'accommodation'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('start_date')">
-                                    Period
-                                    <span v-if="sortBy === 'start_date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('due_date')">
-                                    Due Day
-                                    <span v-if="sortBy === 'due_date'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead>
-                                <button class="flex items-center gap-1" @click="toggleSort('price')">
-                                    Price
-                                    <span v-if="sortBy === 'price'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                </button>
-                            </TableHead>
-                            <TableHead class="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow v-for="stay in stays.data" :key="stay.id">
-                            <TableCell class="font-medium">
-                                {{ stay.category?.label || 'Uncategorized' }}
-                            </TableCell>
-                            <TableCell>
-                                {{ stay.accommodation?.property?.label || 'Unknown' }}
-                            </TableCell>
-                            <TableCell>
-                                {{ stay.accommodation?.label || 'Unknown' }}
-                            </TableCell>
-                            <TableCell>
-                                {{ formatDate(stay.start_date) }} -
-                                {{ formatDate(stay.end_date) }}
-                            </TableCell>
-                            <TableCell>
-                                {{ stay.due_date ? `Day ${stay.due_date}` : '-' }}
-                            </TableCell>
-                            <TableCell>{{ formatCurrency(stay.price) }}</TableCell>
-                            <TableCell class="text-right">
-                                <div class="flex justify-end gap-2">
-                                    <Link :href="`/stays/${stay.id}`">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            View
-                                        </Button>
-                                    </Link>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('edit', stay)"
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="deleteStay(stay.id)"
-                                        >Delete</Button
-                                    >
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                        <TableRow v-if="stays.data.length === 0">
-                            <TableCell colspan="7" class="text-center">
-                                No stays found
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <StaysTable
+                    :data="stays.data"
+                    :sort-by="tableState.sortBy.value"
+                    :sort-dir="tableState.sortDir.value"
+                    show-property
+                    @sort="tableState.toggleSort"
+                    @edit="openModal('edit', $event)"
+                    @delete="deleteStay"
+                />
             </div>
 
-            <!-- Pagination -->
-            <div
+            <TablePagination
                 v-if="stays.meta.last_page > 1"
-                class="mt-4 flex items-center justify-center gap-2"
-            >
-                <Button
-                    v-for="(link, index) in stays.meta.links"
-                    :key="index"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="
-                        link.url &&
-                            router.visit(link.url, {
-                                data: {
-                                    ...(searchQuery ? { search: searchQuery } : {}),
-                                    ...(sortBy ? { sort_by: sortBy } : {}),
-                                    ...(sortBy ? { sort_dir: sortDir } : {}),
-                                },
-                            })
-                    "
-                >
-                    <span v-html="link.label" />
-                </Button>
-            </div>
+                :links="stays.meta.links"
+                :last-page="stays.meta.last_page"
+            />
         </div>
 
         <!-- Unified Modal for Create/Edit -->
