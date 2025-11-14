@@ -704,7 +704,7 @@ const deleteProperty = () => {
                                             <span v-if="expenseSortBy === 'description'">{{ expenseSortDir === 'asc' ? '▲' : '▼' }}</span>
                                         </button>
                                     </TableHead>
-                                    <TableHead>Actions</TableHead>
+                                    <TableHead class="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -717,7 +717,7 @@ const deleteProperty = () => {
                                     <TableCell>{{ formatCurrency(expense.price) }}</TableCell>
                                     <TableCell>{{ formatDate(expense.date) }}</TableCell>
                                     <TableCell>{{ expense.description || '-' }}</TableCell>
-                                    <TableCell>
+                                    <TableCell class="text-right">
                                         <Link :href="`/expenses/${expense.id}`">
                                             <Button variant="outline" size="sm"
                                                 >View Details</Button
