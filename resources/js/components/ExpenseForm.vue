@@ -32,7 +32,7 @@ interface Expense {
         id: number;
         label: string;
     };
-    category: {
+    category?: {
         id: number;
         label: string;
     };
@@ -60,17 +60,24 @@ const emit = defineEmits<{
 const form = useForm({
     property_id: props.expense?.property.id || '',
     accommodation_id: props.expense?.accommodation?.id || '',
-    expense_category_id: props.expense?.category.id || '',
+    expense_category_id: props.expense?.category?.id || '',
     label: props.expense?.label || '',
     price: props.expense?.price || '',
     date: props.expense?.date || '',
     description: props.expense?.description || '',
 });
 
+// Ensure optional relations are sent as null instead of empty string
+function normalizeOptionalFields() {
+    if (!form.accommodation_id) form.accommodation_id = null as any;
+    if (!form.expense_category_id) form.expense_category_id = null as any;
+}
+
 const submit = () => {
+    normalizeOptionalFields();
     if (props.isEdit && props.expense) {
-    const url = `/expenses/${props.expense.id}` + (props.context === 'show' ? '?from=show' : '');
-    form.put(url, {
+        const url = `/expenses/${props.expense.id}` + (props.context === 'show' ? '?from=show' : '');
+        form.put(url, {
             onSuccess: () => emit('success'),
         });
     } else {
@@ -130,7 +137,7 @@ const filteredAccommodations = computed(() => {
         </div>
 
         <div class="space-y-2">
-            <Label for="expense_category_id">Category</Label>
+            <Label for="expense_category_id">Category (Optional)</Label>
             <select
                 id="expense_category_id"
                 v-model="form.expense_category_id"

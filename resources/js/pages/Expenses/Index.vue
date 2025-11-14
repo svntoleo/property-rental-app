@@ -51,7 +51,7 @@ interface Expense {
     category: {
         id: number;
         label: string;
-    };
+    } | null;
 }
 
 interface PaginationLink {
@@ -114,7 +114,7 @@ const toggleSort = (column: string) => {
 let debounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 // Debounced live search
-watch(searchQuery, (q) => {
+watch(searchQuery, () => {
     if (debounceHandle) clearTimeout(debounceHandle);
     debounceHandle = setTimeout(() => {
         applyParams();
@@ -131,12 +131,13 @@ const deleteExpense = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<Expense>();
 
-// Transform expense for form (accommodation: null -> undefined)
+// Transform expense for form (accommodation/category: null -> undefined)
 const expenseForModal = computed(() => {
     if (!entity.value) return undefined;
     return {
         ...entity.value,
         accommodation: entity.value.accommodation ?? undefined,
+        category: entity.value.category ?? undefined,
     };
 });
 
@@ -217,7 +218,7 @@ const expenseForModal = computed(() => {
                             <TableCell class="font-medium">{{
                                 expense.label
                             }}</TableCell>
-                            <TableCell>{{ expense.category.label }}</TableCell>
+                            <TableCell>{{ expense.category?.label || '-' }}</TableCell>
                             <TableCell>{{ expense.property.label }}</TableCell>
                             <TableCell>{{
                                 expense.accommodation?.label || '-'
@@ -283,8 +284,9 @@ const expenseForModal = computed(() => {
                                 },
                             })
                     "
-                    v-html="link.label"
-                />
+                >
+                    <span v-html="link.label" />
+                </Button>
             </div>
         </div>
 

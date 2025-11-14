@@ -39,7 +39,7 @@ interface Expense {
     description: string | null;
     property: Property;
     accommodation: Accommodation | null;
-    category: ExpenseCategory;
+    category: ExpenseCategory | null;
 }
 
 interface Props {
@@ -106,7 +106,7 @@ const deleteExpense = () => {
                         <div>
                             <p class="text-sm font-medium">Category</p>
                             <p class="text-sm text-muted-foreground">
-                                {{ expense.category.label }}
+                                {{ expense.category?.label || '-' }}
                             </p>
                         </div>
                         <div>

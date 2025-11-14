@@ -23,10 +23,13 @@ class StoreExpenseRequest extends FormRequest
     {
         return [
             'property_id' => ['required', 'integer', 'exists:properties,id'],
-            'accommodation_id' => ['required', 'integer', 'exists:accommodations,id'],
-            'expense_category_id' => ['required', 'integer', 'exists:expense_categories,id'],
+            // Accommodation can be omitted when expense is general to the property
+            'accommodation_id' => ['nullable', 'integer', 'exists:accommodations,id'],
+            // Category can be omitted when none applies yet
+            'expense_category_id' => ['nullable', 'integer', 'exists:expense_categories,id'],
             'label' => ['required', 'string', 'max:255'],
             'price' => ['required', 'numeric', 'min:0'],
+            'date' => ['required', 'date'],
             'description' => ['nullable', 'string'],
         ];
     }
