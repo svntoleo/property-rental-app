@@ -131,9 +131,7 @@ interface Props {
     expected_month_income: number;
     expected_month_expenses: number;
     expected_month_profit: number;
-    expected_year_income: number;
-    expected_year_expenses: number;
-    expected_year_profit: number;
+    free_accommodations: number;
 }
 
 
@@ -403,11 +401,17 @@ const deleteProperty = () => {
                         <CardTitle>Statistics</CardTitle>
                     </CardHeader>
                     <CardContent class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <p class="text-sm font-medium">Accommodations</p>
                                 <p class="text-2xl font-bold">
                                     {{ accommodations.meta.total }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">Vacancies</p>
+                                <p class="text-2xl font-bold">
+                                    {{ props.free_accommodations }}
                                 </p>
                             </div>
                             <div>
@@ -422,18 +426,12 @@ const deleteProperty = () => {
                                     {{ tenants.meta.total }}
                                 </p>
                             </div>
-                            <div>
-                                <p class="text-sm font-medium">Expenses</p>
-                                <p class="text-2xl font-bold">
-                                    {{ expenses.meta.total }}
-                                </p>
-                            </div>
                         </div>
                         <div class="pt-2 border-t">
                             <p class="text-xs text-muted-foreground mb-3">
                                 {{ new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) }}
                             </p>
-                            <div class="grid grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 <div>
                                     <p class="text-sm font-medium">Expected Income</p>
                                     <p class="text-2xl font-bold">
@@ -454,31 +452,7 @@ const deleteProperty = () => {
                                 </div>
                             </div>
                         </div>
-                        <div class="pt-4 border-t">
-                            <p class="text-xs text-muted-foreground mb-3">
-                                {{ new Date().getFullYear() }}
-                            </p>
-                            <div class="grid grid-cols-3 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium">Expected Income</p>
-                                    <p class="text-2xl font-bold">
-                                        {{ formatCurrency(props.expected_year_income) }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium">Expected Expenses</p>
-                                    <p class="text-2xl font-bold">
-                                        {{ formatCurrency(props.expected_year_expenses) }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium">Expected Profit</p>
-                                    <p class="text-2xl font-bold">
-                                        {{ formatCurrency(props.expected_year_profit) }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </CardContent>
                 </Card>
             </div>
@@ -494,7 +468,7 @@ const deleteProperty = () => {
                     />
                 </div>
 
-                <div class="rounded-md border">
+                <div class="rounded-md border overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -561,7 +535,7 @@ const deleteProperty = () => {
                     />
                 </div>
 
-                <div class="rounded-md border">
+                <div class="rounded-md border overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -651,6 +625,7 @@ const deleteProperty = () => {
                 </div>
                 <Card>
                     <CardContent class="p-0">
+                        <div class="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -707,6 +682,7 @@ const deleteProperty = () => {
                                 </TableRow>
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -743,7 +719,7 @@ const deleteProperty = () => {
                     />
                 </div>
 
-                <div class="rounded-md border">
+                <div class="rounded-md border overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>

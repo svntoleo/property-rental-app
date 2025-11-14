@@ -198,20 +198,15 @@ class PropertyController extends Controller
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->sum('price');
 
-        // Yearly financial stats for the property (current year)
-        $yearStart = now()->startOfYear();
-        $yearEnd = now()->endOfYear();
+        // Yearly financial stats removed per request
 
-        $expectedYearIncome = Stay::whereHas('accommodation', function ($query) use ($property) {
-                $query->where('property_id', $property->id);
+        // Count of free accommodations (no active stay right now)
+        $freeAccommodations = $property->accommodations()
+            ->whereDoesntHave('stays', function ($q) {
+                $q->where('start_date', '<=', now())
+                  ->where('end_date', '>=', now());
             })
-            ->where('start_date', '<=', $yearEnd)
-            ->where('end_date', '>=', $yearStart)
-            ->sum('price');
-
-        $expectedYearExpenses = Expense::where('property_id', $property->id)
-            ->whereBetween('date', [$yearStart, $yearEnd])
-            ->sum('price');
+            ->count();
 
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
@@ -235,10 +230,8 @@ class PropertyController extends Controller
             'expected_month_income' => (float) $expectedIncome,
             'expected_month_expenses' => (float) $expectedExpenses,
             'expected_month_profit' => (float) ($expectedIncome - $expectedExpenses),
-            // Yearly financial stats
-            'expected_year_income' => (float) $expectedYearIncome,
-            'expected_year_expenses' => (float) $expectedYearExpenses,
-            'expected_year_profit' => (float) ($expectedYearIncome - $expectedYearExpenses),
+            // Availability stats
+            'free_accommodations' => (int) $freeAccommodations,
         ]);
     }
 

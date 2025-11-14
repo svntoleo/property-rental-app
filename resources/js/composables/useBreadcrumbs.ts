@@ -26,8 +26,10 @@ export function useBreadcrumbs(customBreadcrumbs?: BreadcrumbItem[]) {
             return customBreadcrumbs;
         }
 
-        const url = page.url;
-        const segments = url.split('/').filter(Boolean);
+    // Remove query string so breadcrumbs don't show params (e.g., ?sort_by=...)
+    const url = page.url;
+    const pathOnly = url.split('?')[0];
+    const segments = pathOnly.split('/').filter(Boolean);
         const props = page.props as any;
         
         const items: BreadcrumbItem[] = [];
