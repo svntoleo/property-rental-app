@@ -9,6 +9,12 @@ import ResourceDialog from '@/components/ResourceDialog.vue';
 import PropertyForm from '@/components/PropertyForm.vue';
 import { useResourceModal } from '@/composables/useResourceModal';
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
     Card,
     CardContent,
     CardHeader,
@@ -33,6 +39,9 @@ interface Property {
 interface Accommodation {
     id: number;
     label: string;
+    is_occupied?: boolean;
+    active_stay_tenants?: number;
+    active_stay_end_date?: string;
 }
 
 interface Expense {
@@ -478,6 +487,18 @@ const deleteProperty = () => {
                                         <span v-if="accommodationSortBy === 'label'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
                                     </button>
                                 </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('status')">
+                                        Status
+                                        <span v-if="accommodationSortBy === 'status'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
+                                <TableHead>
+                                    <button class="flex items-center gap-1" @click="toggleAccommodationSort('tenants')">
+                                        Tenants
+                                        <span v-if="accommodationSortBy === 'tenants'">{{ accommodationSortDir === 'asc' ? '▲' : '▼' }}</span>
+                                    </button>
+                                </TableHead>
                                 <TableHead class="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -487,6 +508,35 @@ const deleteProperty = () => {
                                 :key="accommodation.id"
                             >
                                 <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
+                                <TableCell>
+                                    <TooltipProvider v-if="accommodation.is_occupied && accommodation.active_stay_end_date">
+                                        <Tooltip>
+                                            <TooltipTrigger as-child>
+                                                <span
+                                                    class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium cursor-help"
+                                                    :class="accommodation.is_occupied
+                                                        ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                        : 'bg-green-500/10 text-green-500 border-green-500/20'"
+                                                >
+                                                    {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Ends: {{ formatDate(accommodation.active_stay_end_date) }}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <span
+                                        v-else
+                                        class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
+                                        :class="accommodation.is_occupied
+                                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                            : 'bg-green-500/10 text-green-500 border-green-500/20'"
+                                    >
+                                        {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
+                                    </span>
+                                </TableCell>
+                                <TableCell>{{ accommodation.is_occupied ? accommodation.active_stay_tenants : '-' }}</TableCell>
                                 <TableCell class="text-right">
                                     <Link :href="`/accommodations/${accommodation.id}`">
                                         <Button variant="outline" size="sm">View Details</Button>
@@ -494,7 +544,7 @@ const deleteProperty = () => {
                                 </TableCell>
                             </TableRow>
                             <TableRow v-if="accommodations.data.length === 0">
-                                <TableCell colspan="2" class="text-center">
+                                <TableCell colspan="5" class="text-center">
                                     No accommodations found
                                 </TableCell>
                             </TableRow>

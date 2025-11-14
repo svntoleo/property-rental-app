@@ -25,9 +25,18 @@ class AccommodationController extends Controller
             'label' => 'accommodations.label',
             'property' => 'properties.label',
             'created_at' => 'accommodations.created_at',
+            'status' => 'is_occupied',
+            'tenants' => 'active_tenants_count',
         ];
 
-        $query = Accommodation::with(['property', 'stays', 'expenses'])
+        $query = Accommodation::with([
+                'property',
+                // Only load active stays for occupancy + tenant count
+                'stays' => function ($q) {
+                    $q->active()->withCount('tenants');
+                },
+                'expenses'
+            ])
             ->when(!empty($search), function ($query) use ($search) {
                 $query->where('label', 'like', "%{$search}%")
                     ->orWhereHas('property', function ($q) use ($search) {
@@ -40,6 +49,25 @@ class AccommodationController extends Controller
                 $query->leftJoin('properties', 'properties.id', '=', 'accommodations.property_id')
                     ->select('accommodations.*')
                     ->orderBy('properties.label', $sortDir);
+            } elseif ($sortBy === 'status' || $sortBy === 'tenants') {
+                // Subquery to calculate occupancy and tenant count for sorting
+                $query->leftJoin('stays', function ($join) {
+                    $join->on('stays.accommodation_id', '=', 'accommodations.id')
+                         ->where('stays.start_date', '<=', now())
+                         ->where('stays.end_date', '>=', now())
+                         ->whereNull('stays.deleted_at');
+                })
+                ->select('accommodations.*');
+                
+                if ($sortBy === 'status') {
+                    // Sort by whether there's an active stay (occupied = 1, free = 0)
+                    $query->orderByRaw('CASE WHEN stays.id IS NOT NULL THEN 1 ELSE 0 END ' . $sortDir);
+                } else {
+                    // Sort by tenant count of active stay
+                    $query->leftJoin('tenants', 'tenants.stay_id', '=', 'stays.id')
+                        ->groupBy('accommodations.id')
+                        ->orderByRaw('COUNT(DISTINCT tenants.id) ' . $sortDir);
+                }
             } else {
                 $query->orderBy($allowedSorts[$sortBy], $sortDir);
             }

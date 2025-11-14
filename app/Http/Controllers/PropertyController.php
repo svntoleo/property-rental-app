@@ -111,15 +111,39 @@ class PropertyController extends Controller
         $accommodationSearch = request('accommodation_search');
         $accommodationSortBy = request('accommodation_sort_by', 'label');
         $accommodationSortDir = request('accommodation_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
-        $allowedAccommodationSorts = ['label'];
+        $allowedAccommodationSorts = ['label', 'status', 'tenants'];
         $accommodationSortBy = in_array($accommodationSortBy, $allowedAccommodationSorts) ? $accommodationSortBy : 'label';
 
         $accommodations = $property->accommodations()
+            ->with(['stays' => function ($q) {
+                $q->active()->withCount('tenants');
+            }])
             ->when(!empty($accommodationSearch), function ($query) use ($accommodationSearch) {
                 $query->where('label', 'like', "%{$accommodationSearch}%");
+            });
+            
+        if ($accommodationSortBy === 'status' || $accommodationSortBy === 'tenants') {
+            // Subquery joins for sorting by occupancy/tenant count
+            $accommodations->leftJoin('stays', function ($join) {
+                $join->on('stays.accommodation_id', '=', 'accommodations.id')
+                     ->where('stays.start_date', '<=', now())
+                     ->where('stays.end_date', '>=', now())
+                     ->whereNull('stays.deleted_at');
             })
-            ->orderBy($accommodationSortBy, $accommodationSortDir)
-            ->paginate(10, ['*'], 'accommodation_page')
+            ->select('accommodations.*');
+            
+            if ($accommodationSortBy === 'status') {
+                $accommodations->orderByRaw('CASE WHEN stays.id IS NOT NULL THEN 1 ELSE 0 END ' . $accommodationSortDir);
+            } else {
+                $accommodations->leftJoin('tenants', 'tenants.stay_id', '=', 'stays.id')
+                    ->groupBy('accommodations.id')
+                    ->orderByRaw('COUNT(DISTINCT tenants.id) ' . $accommodationSortDir);
+            }
+        } else {
+            $accommodations->orderBy($accommodationSortBy, $accommodationSortDir);
+        }
+        
+        $accommodations = $accommodations->paginate(10, ['*'], 'accommodation_page')
             ->appends([
                 'accommodation_search' => $accommodationSearch,
                 'accommodation_sort_by' => $accommodationSortBy,

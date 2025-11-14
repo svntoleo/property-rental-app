@@ -16,6 +16,13 @@ import { useResourceModal } from '@/composables/useResourceModal';
 import { useBreadcrumbs } from '@/composables/useBreadcrumbs';
 import ResourceDialog from '@/components/ResourceDialog.vue';
 import AccommodationForm from '@/components/AccommodationForm.vue';
+import { formatDate } from '@/lib/format';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Property {
     id: number;
@@ -27,6 +34,9 @@ interface Accommodation {
     id: number;
     label: string;
     property: Property;
+    is_occupied?: boolean;
+    active_stay_tenants?: number;
+    active_stay_end_date?: string;
 }
 
 interface PaginationLink {
@@ -134,7 +144,7 @@ const accommodationForForm = computed(() => {
                 />
             </div>
 
-            <div class="rounded-md border">
+            <div class="rounded-md border overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -150,6 +160,18 @@ const accommodationForForm = computed(() => {
                                     <span v-if="sortBy === 'property'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
                                 </button>
                             </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('status')">
+                                    Status
+                                    <span v-if="sortBy === 'status'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
+                            <TableHead>
+                                <button class="flex items-center gap-1" @click="toggleSort('tenants')">
+                                    Tenants
+                                    <span v-if="sortBy === 'tenants'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+                                </button>
+                            </TableHead>
                             <TableHead class="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -158,40 +180,49 @@ const accommodationForForm = computed(() => {
                             v-for="accommodation in accommodations.data"
                             :key="accommodation.id"
                         >
-                            <TableCell class="font-medium">{{
-                                accommodation.label
-                            }}</TableCell>
+                            <TableCell class="font-medium">{{ accommodation.label }}</TableCell>
                             <TableCell>{{ accommodation.property.label }}</TableCell>
+                            <TableCell>
+                                <TooltipProvider v-if="accommodation.is_occupied && accommodation.active_stay_end_date">
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <span
+                                                class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium cursor-help"
+                                                :class="accommodation.is_occupied
+                                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                    : 'bg-green-500/10 text-green-500 border-green-500/20'"
+                                            >
+                                                {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Ends: {{ formatDate(accommodation.active_stay_end_date) }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <span
+                                    v-else
+                                    class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
+                                    :class="accommodation.is_occupied
+                                        ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                        : 'bg-green-500/10 text-green-500 border-green-500/20'"
+                                >
+                                    {{ accommodation.is_occupied ? 'Occupied' : 'Free' }}
+                                </span>
+                            </TableCell>
+                            <TableCell>{{ accommodation.is_occupied ? accommodation.active_stay_tenants : '-' }}</TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
                                     <Link :href="`/accommodations/${accommodation.id}`">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            View
-                                        </Button>
+                                        <Button variant="outline" size="sm">View</Button>
                                     </Link>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        @click="openModal('edit', accommodation)"
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="deleteAccommodation(accommodation.id)"
-                                        >Delete</Button
-                                    >
+                                    <Button variant="outline" size="sm" @click="openModal('edit', accommodation)">Edit</Button>
+                                    <Button variant="destructive" size="sm" @click="deleteAccommodation(accommodation.id)">Delete</Button>
                                 </div>
                             </TableCell>
                         </TableRow>
                         <TableRow v-if="accommodations.data.length === 0">
-                            <TableCell colspan="3" class="text-center">
-                                No accommodations found
-                            </TableCell>
+                            <TableCell colspan="5" class="text-center">No accommodations found</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
