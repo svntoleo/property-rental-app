@@ -68,9 +68,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::registerView(fn () => Inertia::render('auth/Register'));
 
-        if (Features::enabled(Features::twoFactorAuthentication())) {
-            Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/TwoFactorChallenge'));
-        }
+        // Two-factor authentication is disabled; no 2FA challenge view is registered.
 
         Fortify::confirmPasswordView(fn () => Inertia::render('auth/ConfirmPassword'));
     }
@@ -80,11 +78,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureRateLimiting(): void
     {
-        if (Features::enabled(Features::twoFactorAuthentication())) {
-            RateLimiter::for('two-factor', function (Request $request) {
-                return Limit::perMinute(5)->by($request->session()->get('login.id'));
-            });
-        }
+        // Two-factor authentication is disabled; no two-factor rate limiter is registered.
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());

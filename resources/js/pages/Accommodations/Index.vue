@@ -81,6 +81,15 @@ const deleteAccommodation = (id: number) => {
 const { isOpen, mode, entity, open: openModal, close: closeModal, onSuccess } =
     useResourceModal<Accommodation>();
 
+// Guarded edit handler to satisfy required property typing in this page
+const handleEdit = (row: { id: number; label: string; property?: Property }) => {
+    if (!row.property) {
+        // If somehow a row without property arrives, do nothing for safety
+        return;
+    }
+    openModal('edit', row as Accommodation);
+};
+
 // Transform accommodation for form (needs property_id instead of property object)
 const accommodationForForm = computed(() => {
     if (!entity.value) return undefined;
@@ -117,7 +126,7 @@ const accommodationForForm = computed(() => {
                 :sort-dir="tableState.sortDir.value"
                 show-property
                 @sort="tableState.toggleSort"
-                @edit="openModal('edit', $event)"
+                @edit="handleEdit"
                 @delete="deleteAccommodation"
             />
 

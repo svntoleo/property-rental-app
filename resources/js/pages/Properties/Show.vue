@@ -427,6 +427,7 @@ const deleteProperty = () => {
                     :data="tenants.data"
                     :sort-by="tenantTable.sortBy.value"
                     :sort-dir="tenantTable.sortDir.value"
+                    :show-property="false"
                     actions-type="view-only"
                     @sort="tenantTable.toggleSort"
                 />

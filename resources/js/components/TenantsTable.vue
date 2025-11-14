@@ -33,6 +33,7 @@ interface Props {
     sortBy?: string;
     sortDir?: 'asc' | 'desc';
     showStayPeriod?: boolean;
+    showProperty?: boolean;
     showActions?: boolean;
     actionsType?: 'full' | 'view-only';
 }
@@ -41,6 +42,7 @@ const props = withDefaults(defineProps<Props>(), {
     sortBy: 'name',
     sortDir: 'asc',
     showStayPeriod: true,
+    showProperty: true,
     showActions: true,
     actionsType: 'full',
 });
@@ -56,7 +58,7 @@ const columns: Column<Tenant>[] = [
     { key: 'email', label: 'Email', sortable: true },
     { key: 'cpf', label: 'CPF', sortable: true },
     { key: 'phone', label: 'Phone', sortable: true },
-    { key: 'property', label: 'Property', sortable: true },
+    ...(props.showProperty ? [{ key: 'property', label: 'Property', sortable: true } as const] : []),
     { key: 'accommodation', label: 'Accommodation', sortable: true },
     ...(props.showStayPeriod ? [{ key: 'stay_period', label: 'Stay Period', sortable: true }] : []),
     ...(props.showActions ? [{ key: 'actions', label: 'Actions', headerClass: 'text-right', class: 'text-right' }] : []),
