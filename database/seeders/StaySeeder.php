@@ -14,28 +14,31 @@ class StaySeeder extends Seeder
     {
         $stayCategories = \App\Models\StayCategory::all();
         
-        // Create 1-3 non-overlapping stays for each accommodation
+        // Create chronological, non-overlapping stays for each accommodation.
+        // Logic: build a timeline from (now - 9 months) forward; each stay starts the day after previous ends.
         \App\Models\Accommodation::all()->each(function ($accommodation) use ($stayCategories) {
-            $stayCount = rand(1, 3);
-            $lastEndDate = now()->subYear(); // Start from a year ago
-            
+            $stayCount = rand(1, 4); // Slightly higher upper bound for variety
+            $cursor = now()->subMonths(9)->startOfDay();
+
             for ($i = 0; $i < $stayCount; $i++) {
-                // Start the next stay at least 1 day after the previous one ended
-                $gapDays = rand(1, 90); // 1-90 days gap between stays
-                $startDate = \Carbon\Carbon::parse($lastEndDate)->addDays($gapDays);
-                
-                // End date is 1-12 months after start date
-                $durationMonths = rand(1, 12);
-                $endDate = $startDate->copy()->addMonths($durationMonths);
-                
-                \App\Models\Stay::factory()->create([
+                // Random length between 1 and 6 months to reduce long overlaps
+                $durationMonths = rand(1, 6);
+                $startDate = $cursor->copy();
+                $endDate = $startDate->copy()->addMonths($durationMonths)->subDay(); // inclusive end
+
+                // Persist stay ensuring no overlap: since we advance cursor past endDate, earlier stays won't overlap
+                \App\Models\Stay::create([
                     'accommodation_id' => $accommodation->id,
                     'stay_category_id' => $stayCategories->random()->id,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
+                    'start_date' => $startDate->toDateString(),
+                    'end_date' => $endDate->toDateString(),
+                    'price' => fake()->randomFloat(2, 800, 4000),
+                    'due_date' => fake()->optional()->numberBetween(1, 28),
                 ]);
-                
-                $lastEndDate = $endDate;
+
+                // Advance cursor to the next day after end plus a random gap (0–30 days)
+                $gapDays = rand(0, 30);
+                $cursor = $endDate->copy()->addDays(1 + $gapDays);
             }
         });
     }

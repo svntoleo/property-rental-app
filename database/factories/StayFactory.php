@@ -16,8 +16,10 @@ class StayFactory extends Factory
      */
     public function definition(): array
     {
-        $startDate = fake()->dateTimeBetween('-1 year', '+6 months');
-        $endDate = fake()->dateTimeBetween($startDate, '+1 year');
+    // Factory default: short forward-looking stay (non-overlapping responsibility handled by seeder/business rules)
+    $startDate = fake()->dateTimeBetween('-3 months', '+3 months');
+    // Ensure end >= start and max 6 months span to keep realistic sizes
+    $endDate = (clone $startDate)->modify('+' . rand(1, 180) . ' days');
         
         return [
             'accommodation_id' => \App\Models\Accommodation::factory(),
