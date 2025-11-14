@@ -170,3 +170,22 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+  Improve native <select> readability in dark mode.
+  The form selects were using a transparent background, causing option lists
+  to render with a default light background while inheriting near-white text
+  (--foreground) in dark mode → low/zero contrast.
+  We force an explicit background + foreground for the control and its options.
+*/
+@layer components {
+    select {
+        @apply bg-card text-foreground;
+    }
+    select option {
+        @apply bg-card text-foreground;
+    }
+    .dark select, .dark select option {
+        @apply bg-secondary text-foreground;
+    }
+}
