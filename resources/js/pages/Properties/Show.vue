@@ -578,11 +578,11 @@ const deleteExpense = (id: number) => {
                         <TabsTrigger value="active">
                             Active ({{ active_stays.meta.total }})
                         </TabsTrigger>
-                        <TabsTrigger value="past">
-                            Past ({{ past_stays.meta.total }})
-                        </TabsTrigger>
                         <TabsTrigger value="future">
                             Future ({{ future_stays.meta.total }})
+                        </TabsTrigger>
+                        <TabsTrigger value="past">
+                            Past ({{ past_stays.meta.total }})
                         </TabsTrigger>
                     </TabsList>
 
@@ -610,30 +610,6 @@ const deleteExpense = (id: number) => {
                         />
                     </TabsContent>
 
-                    <TabsContent value="past" class="space-y-4">
-                        <Input
-                            v-model="pastStayTable.searchQuery.value"
-                            placeholder="Search past stays..."
-                            class="max-w-sm"
-                        />
-                        <StaysTable
-                            v-if="past_stays.data.length > 0"
-                            :data="past_stays.data"
-                            :sort-by="pastStayTable.sortBy.value"
-                            :sort-dir="pastStayTable.sortDir.value"
-                            actions-type="full"
-                            @sort="pastStayTable.toggleSort"
-                            @edit="handleStayEdit"
-                            @delete="deleteStay"
-                        />
-                        <p v-else class="text-sm text-muted-foreground">No past stays</p>
-                        <TablePagination
-                            v-if="past_stays.data.length > 0"
-                            :links="past_stays.meta.links"
-                            :last-page="past_stays.meta.last_page"
-                        />
-                    </TabsContent>
-
                     <TabsContent value="future" class="space-y-4">
                         <Input
                             v-model="futureStayTable.searchQuery.value"
@@ -655,6 +631,30 @@ const deleteExpense = (id: number) => {
                             v-if="future_stays.data.length > 0"
                             :links="future_stays.meta.links"
                             :last-page="future_stays.meta.last_page"
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="past" class="space-y-4">
+                        <Input
+                            v-model="pastStayTable.searchQuery.value"
+                            placeholder="Search past stays..."
+                            class="max-w-sm"
+                        />
+                        <StaysTable
+                            v-if="past_stays.data.length > 0"
+                            :data="past_stays.data"
+                            :sort-by="pastStayTable.sortBy.value"
+                            :sort-dir="pastStayTable.sortDir.value"
+                            actions-type="full"
+                            @sort="pastStayTable.toggleSort"
+                            @edit="handleStayEdit"
+                            @delete="deleteStay"
+                        />
+                        <p v-else class="text-sm text-muted-foreground">No past stays</p>
+                        <TablePagination
+                            v-if="past_stays.data.length > 0"
+                            :links="past_stays.meta.links"
+                            :last-page="past_stays.meta.last_page"
                         />
                     </TabsContent>
                 </Tabs>
