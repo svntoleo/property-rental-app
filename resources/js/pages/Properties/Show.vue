@@ -20,6 +20,12 @@ import StaysTable from '@/components/StaysTable.vue';
 import TenantsTable from '@/components/TenantsTable.vue';
 import TablePagination from '@/components/TablePagination.vue';
 import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '@/components/ui/tabs';
+import {
     Card,
     CardContent,
     CardHeader,
@@ -132,13 +138,28 @@ interface Props {
     accommodation_search: string;
     accommodation_sort_by?: string;
     accommodation_sort_dir?: 'asc' | 'desc';
-    stays: {
+    // Three stay collections for tabs
+    active_stays: {
         data: Stay[];
         meta: PaginationMeta;
     };
-    stay_search: string;
-    stay_sort_by?: string;
-    stay_sort_dir?: 'asc' | 'desc';
+    active_stay_search: string;
+    active_stay_sort_by?: string;
+    active_stay_sort_dir?: 'asc' | 'desc';
+    past_stays: {
+        data: Stay[];
+        meta: PaginationMeta;
+    };
+    past_stay_search: string;
+    past_stay_sort_by?: string;
+    past_stay_sort_dir?: 'asc' | 'desc';
+    future_stays: {
+        data: Stay[];
+        meta: PaginationMeta;
+    };
+    future_stay_search: string;
+    future_stay_sort_by?: string;
+    future_stay_sort_dir?: 'asc' | 'desc';
     tenants: {
         data: Tenant[];
         meta: PaginationMeta;
@@ -164,6 +185,34 @@ interface Props {
 }
 const props = defineProps<Props>();
 
+// Build shared preserve params for all table states (DRY)
+const buildPreserveParams = (exclude: string[]) => {
+    const allParams = {
+        expense_search: props.expense_search,
+        expense_sort_by: props.expense_sort_by,
+        expense_sort_dir: props.expense_sort_dir,
+        accommodation_search: props.accommodation_search,
+        accommodation_sort_by: props.accommodation_sort_by,
+        accommodation_sort_dir: props.accommodation_sort_dir,
+        active_stay_search: props.active_stay_search,
+        active_stay_sort_by: props.active_stay_sort_by,
+        active_stay_sort_dir: props.active_stay_sort_dir,
+        past_stay_search: props.past_stay_search,
+        past_stay_sort_by: props.past_stay_sort_by,
+        past_stay_sort_dir: props.past_stay_sort_dir,
+        future_stay_search: props.future_stay_search,
+        future_stay_sort_by: props.future_stay_sort_by,
+        future_stay_sort_dir: props.future_stay_sort_dir,
+        tenant_search: props.tenant_search,
+        tenant_sort_by: props.tenant_sort_by,
+        tenant_sort_dir: props.tenant_sort_dir,
+    };
+    
+    // Remove excluded params (the current table's own params)
+    exclude.forEach(key => delete allParams[key as keyof typeof allParams]);
+    return allParams;
+};
+
 // Table state management using composable
 const expenseTable = useTableState({
     resourceName: 'expense',
@@ -173,17 +222,7 @@ const expenseTable = useTableState({
     initialSearch: props.expense_search,
     initialSortBy: props.expense_sort_by,
     initialSortDir: props.expense_sort_dir,
-    preserveParams: {
-        accommodation_search: props.accommodation_search,
-        accommodation_sort_by: props.accommodation_sort_by,
-        accommodation_sort_dir: props.accommodation_sort_dir,
-        stay_search: props.stay_search,
-        stay_sort_by: props.stay_sort_by,
-        stay_sort_dir: props.stay_sort_dir,
-        tenant_search: props.tenant_search,
-        tenant_sort_by: props.tenant_sort_by,
-        tenant_sort_dir: props.tenant_sort_dir,
-    },
+    preserveParams: buildPreserveParams(['expense_search', 'expense_sort_by', 'expense_sort_dir']),
 });
 
 const accommodationTable = useTableState({
@@ -194,38 +233,41 @@ const accommodationTable = useTableState({
     initialSearch: props.accommodation_search,
     initialSortBy: props.accommodation_sort_by,
     initialSortDir: props.accommodation_sort_dir,
-    preserveParams: {
-        expense_search: props.expense_search,
-        expense_sort_by: props.expense_sort_by,
-        expense_sort_dir: props.expense_sort_dir,
-        stay_search: props.stay_search,
-        stay_sort_by: props.stay_sort_by,
-        stay_sort_dir: props.stay_sort_dir,
-        tenant_search: props.tenant_search,
-        tenant_sort_by: props.tenant_sort_by,
-        tenant_sort_dir: props.tenant_sort_dir,
-    },
+    preserveParams: buildPreserveParams(['accommodation_search', 'accommodation_sort_by', 'accommodation_sort_dir']),
 });
 
-const stayTable = useTableState({
-    resourceName: 'stay',
+// Three separate stay table states
+const activeStayTable = useTableState({
+    resourceName: 'active_stay',
     defaultSortBy: 'start_date',
     defaultSortDir: 'desc',
     currentUrl: `/properties/${props.property.id}`,
-    initialSearch: props.stay_search,
-    initialSortBy: props.stay_sort_by,
-    initialSortDir: props.stay_sort_dir,
-    preserveParams: {
-        expense_search: props.expense_search,
-        expense_sort_by: props.expense_sort_by,
-        expense_sort_dir: props.expense_sort_dir,
-        accommodation_search: props.accommodation_search,
-        accommodation_sort_by: props.accommodation_sort_by,
-        accommodation_sort_dir: props.accommodation_sort_dir,
-        tenant_search: props.tenant_search,
-        tenant_sort_by: props.tenant_sort_by,
-        tenant_sort_dir: props.tenant_sort_dir,
-    },
+    initialSearch: props.active_stay_search,
+    initialSortBy: props.active_stay_sort_by,
+    initialSortDir: props.active_stay_sort_dir,
+    preserveParams: buildPreserveParams(['active_stay_search', 'active_stay_sort_by', 'active_stay_sort_dir']),
+});
+
+const pastStayTable = useTableState({
+    resourceName: 'past_stay',
+    defaultSortBy: 'end_date',
+    defaultSortDir: 'desc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.past_stay_search,
+    initialSortBy: props.past_stay_sort_by,
+    initialSortDir: props.past_stay_sort_dir,
+    preserveParams: buildPreserveParams(['past_stay_search', 'past_stay_sort_by', 'past_stay_sort_dir']),
+});
+
+const futureStayTable = useTableState({
+    resourceName: 'future_stay',
+    defaultSortBy: 'start_date',
+    defaultSortDir: 'asc',
+    currentUrl: `/properties/${props.property.id}`,
+    initialSearch: props.future_stay_search,
+    initialSortBy: props.future_stay_sort_by,
+    initialSortDir: props.future_stay_sort_dir,
+    preserveParams: buildPreserveParams(['future_stay_search', 'future_stay_sort_by', 'future_stay_sort_dir']),
 });
 
 const tenantTable = useTableState({
@@ -236,17 +278,7 @@ const tenantTable = useTableState({
     initialSearch: props.tenant_search,
     initialSortBy: props.tenant_sort_by,
     initialSortDir: props.tenant_sort_dir,
-    preserveParams: {
-        expense_search: props.expense_search,
-        expense_sort_by: props.expense_sort_by,
-        expense_sort_dir: props.expense_sort_dir,
-        accommodation_search: props.accommodation_search,
-        accommodation_sort_by: props.accommodation_sort_by,
-        accommodation_sort_dir: props.accommodation_sort_dir,
-        stay_search: props.stay_search,
-        stay_sort_by: props.stay_sort_by,
-        stay_sort_dir: props.stay_sort_dir,
-    },
+    preserveParams: buildPreserveParams(['tenant_search', 'tenant_sort_by', 'tenant_sort_dir']),
 });
 
 const { breadcrumbs } = useBreadcrumbs();
@@ -465,7 +497,7 @@ const deleteExpense = (id: number) => {
                             <div>
                                 <p class="text-sm font-medium">Active Stays</p>
                                 <p class="text-2xl font-bold">
-                                    {{ stays.meta.total }}
+                                    {{ active_stays.meta.total }}
                                 </p>
                             </div>
                             <div>
@@ -535,34 +567,97 @@ const deleteExpense = (id: number) => {
                 />
             </div>
 
-            <div v-if="stays.data.length > 0" class="grid gap-4">
+            <div class="grid gap-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold">Active Stays</h2>
+                    <h2 class="text-xl font-semibold">Stays</h2>
                     <Button @click="openStay('create')">Create Stay</Button>
                 </div>
                 
-                <div class="flex items-center gap-2">
-                    <Input
-                        v-model="stayTable.searchQuery.value"
-                        placeholder="Search stays..."
-                        class="max-w-sm"
-                    />
-                </div>
+                <Tabs default-value="active" class="w-full">
+                    <TabsList>
+                        <TabsTrigger value="active">
+                            Active ({{ active_stays.meta.total }})
+                        </TabsTrigger>
+                        <TabsTrigger value="past">
+                            Past ({{ past_stays.meta.total }})
+                        </TabsTrigger>
+                        <TabsTrigger value="future">
+                            Future ({{ future_stays.meta.total }})
+                        </TabsTrigger>
+                    </TabsList>
 
-                <StaysTable
-                    :data="stays.data"
-                    :sort-by="stayTable.sortBy.value"
-                    :sort-dir="stayTable.sortDir.value"
-                    actions-type="full"
-                    @sort="stayTable.toggleSort"
-                    @edit="handleStayEdit"
-                    @delete="deleteStay"
-                />
+                    <TabsContent value="active" class="space-y-4">
+                        <Input
+                            v-model="activeStayTable.searchQuery.value"
+                            placeholder="Search active stays..."
+                            class="max-w-sm"
+                        />
+                        <StaysTable
+                            v-if="active_stays.data.length > 0"
+                            :data="active_stays.data"
+                            :sort-by="activeStayTable.sortBy.value"
+                            :sort-dir="activeStayTable.sortDir.value"
+                            actions-type="full"
+                            @sort="activeStayTable.toggleSort"
+                            @edit="handleStayEdit"
+                            @delete="deleteStay"
+                        />
+                        <p v-else class="text-sm text-muted-foreground">No active stays</p>
+                        <TablePagination
+                            v-if="active_stays.data.length > 0"
+                            :links="active_stays.meta.links"
+                            :last-page="active_stays.meta.last_page"
+                        />
+                    </TabsContent>
 
-                <TablePagination
-                    :links="stays.meta.links"
-                    :last-page="stays.meta.last_page"
-                />
+                    <TabsContent value="past" class="space-y-4">
+                        <Input
+                            v-model="pastStayTable.searchQuery.value"
+                            placeholder="Search past stays..."
+                            class="max-w-sm"
+                        />
+                        <StaysTable
+                            v-if="past_stays.data.length > 0"
+                            :data="past_stays.data"
+                            :sort-by="pastStayTable.sortBy.value"
+                            :sort-dir="pastStayTable.sortDir.value"
+                            actions-type="full"
+                            @sort="pastStayTable.toggleSort"
+                            @edit="handleStayEdit"
+                            @delete="deleteStay"
+                        />
+                        <p v-else class="text-sm text-muted-foreground">No past stays</p>
+                        <TablePagination
+                            v-if="past_stays.data.length > 0"
+                            :links="past_stays.meta.links"
+                            :last-page="past_stays.meta.last_page"
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="future" class="space-y-4">
+                        <Input
+                            v-model="futureStayTable.searchQuery.value"
+                            placeholder="Search future stays..."
+                            class="max-w-sm"
+                        />
+                        <StaysTable
+                            v-if="future_stays.data.length > 0"
+                            :data="future_stays.data"
+                            :sort-by="futureStayTable.sortBy.value"
+                            :sort-dir="futureStayTable.sortDir.value"
+                            actions-type="full"
+                            @sort="futureStayTable.toggleSort"
+                            @edit="handleStayEdit"
+                            @delete="deleteStay"
+                        />
+                        <p v-else class="text-sm text-muted-foreground">No future stays</p>
+                        <TablePagination
+                            v-if="future_stays.data.length > 0"
+                            :links="future_stays.meta.links"
+                            :last-page="future_stays.meta.last_page"
+                        />
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <div v-if="tenants.data.length > 0" class="grid gap-4">

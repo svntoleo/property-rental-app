@@ -137,34 +137,94 @@ class PropertyController extends Controller
                 'accommodation_sort_dir' => $accommodationSortDir,
             ]);
 
-        // Active stays search and sorting
-        $staySearch = request('stay_search');
-        $staySortBy = request('stay_sort_by', 'start_date');
-        $staySortDir = request('stay_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
+        // Stays - split into active, past, and future with separate search/sort
         $allowedStaySorts = ['start_date', 'end_date', 'price'];
-        $staySortBy = in_array($staySortBy, $allowedStaySorts) ? $staySortBy : 'start_date';
+        
+        // Active stays
+        $activeStaySearch = request('active_stay_search');
+        $activeStaySortBy = request('active_stay_sort_by', 'start_date');
+        $activeStaySortDir = request('active_stay_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
+        $activeStaySortBy = in_array($activeStaySortBy, $allowedStaySorts) ? $activeStaySortBy : 'start_date';
 
-        $stays = Stay::with(['accommodation', 'category', 'tenants'])
+        $activeStays = Stay::with(['accommodation', 'category', 'tenants'])
             ->whereHas('accommodation', function ($query) use ($property) {
                 $query->where('property_id', $property->id);
             })
             ->active()
-            ->when(!empty($staySearch), function ($query) use ($staySearch) {
-                $query->where(function ($q) use ($staySearch) {
-                    $q->whereHas('category', function ($catQuery) use ($staySearch) {
-                        $catQuery->where('label', 'like', "%{$staySearch}%");
+            ->when(!empty($activeStaySearch), function ($query) use ($activeStaySearch) {
+                $query->where(function ($q) use ($activeStaySearch) {
+                    $q->whereHas('category', function ($catQuery) use ($activeStaySearch) {
+                        $catQuery->where('label', 'like', "%{$activeStaySearch}%");
                     })
-                    ->orWhere('start_date', 'like', "%{$staySearch}%")
-                    ->orWhere('end_date', 'like', "%{$staySearch}%")
-                    ->orWhere('price', 'like', "%{$staySearch}%");
+                    ->orWhere('start_date', 'like', "%{$activeStaySearch}%")
+                    ->orWhere('end_date', 'like', "%{$activeStaySearch}%")
+                    ->orWhere('price', 'like', "%{$activeStaySearch}%");
                 });
             })
-            ->orderBy($staySortBy, $staySortDir)
-            ->paginate(10, ['*'], 'stay_page')
+            ->orderBy($activeStaySortBy, $activeStaySortDir)
+            ->paginate(10, ['*'], 'active_stay_page')
             ->appends([
-                'stay_search' => $staySearch,
-                'stay_sort_by' => $staySortBy,
-                'stay_sort_dir' => $staySortDir,
+                'active_stay_search' => $activeStaySearch,
+                'active_stay_sort_by' => $activeStaySortBy,
+                'active_stay_sort_dir' => $activeStaySortDir,
+            ]);
+
+        // Past stays
+        $pastStaySearch = request('past_stay_search');
+        $pastStaySortBy = request('past_stay_sort_by', 'end_date');
+        $pastStaySortDir = request('past_stay_sort_dir', 'desc') === 'desc' ? 'desc' : 'asc';
+        $pastStaySortBy = in_array($pastStaySortBy, $allowedStaySorts) ? $pastStaySortBy : 'end_date';
+
+        $pastStays = Stay::with(['accommodation', 'category', 'tenants'])
+            ->whereHas('accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->where('end_date', '<', now())
+            ->when(!empty($pastStaySearch), function ($query) use ($pastStaySearch) {
+                $query->where(function ($q) use ($pastStaySearch) {
+                    $q->whereHas('category', function ($catQuery) use ($pastStaySearch) {
+                        $catQuery->where('label', 'like', "%{$pastStaySearch}%");
+                    })
+                    ->orWhere('start_date', 'like', "%{$pastStaySearch}%")
+                    ->orWhere('end_date', 'like', "%{$pastStaySearch}%")
+                    ->orWhere('price', 'like', "%{$pastStaySearch}%");
+                });
+            })
+            ->orderBy($pastStaySortBy, $pastStaySortDir)
+            ->paginate(10, ['*'], 'past_stay_page')
+            ->appends([
+                'past_stay_search' => $pastStaySearch,
+                'past_stay_sort_by' => $pastStaySortBy,
+                'past_stay_sort_dir' => $pastStaySortDir,
+            ]);
+
+        // Future stays
+        $futureStaySearch = request('future_stay_search');
+        $futureStaySortBy = request('future_stay_sort_by', 'start_date');
+        $futureStaySortDir = request('future_stay_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $futureStaySortBy = in_array($futureStaySortBy, $allowedStaySorts) ? $futureStaySortBy : 'start_date';
+
+        $futureStays = Stay::with(['accommodation', 'category', 'tenants'])
+            ->whereHas('accommodation', function ($query) use ($property) {
+                $query->where('property_id', $property->id);
+            })
+            ->where('start_date', '>', now())
+            ->when(!empty($futureStaySearch), function ($query) use ($futureStaySearch) {
+                $query->where(function ($q) use ($futureStaySearch) {
+                    $q->whereHas('category', function ($catQuery) use ($futureStaySearch) {
+                        $catQuery->where('label', 'like', "%{$futureStaySearch}%");
+                    })
+                    ->orWhere('start_date', 'like', "%{$futureStaySearch}%")
+                    ->orWhere('end_date', 'like', "%{$futureStaySearch}%")
+                    ->orWhere('price', 'like', "%{$futureStaySearch}%");
+                });
+            })
+            ->orderBy($futureStaySortBy, $futureStaySortDir)
+            ->paginate(10, ['*'], 'future_stay_page')
+            ->appends([
+                'future_stay_search' => $futureStaySearch,
+                'future_stay_sort_by' => $futureStaySortBy,
+                'future_stay_sort_dir' => $futureStaySortDir,
             ]);
 
         // Tenants search and sorting (only from active stays)
@@ -246,10 +306,19 @@ class PropertyController extends Controller
             'accommodation_search' => $accommodationSearch ?? '',
             'accommodation_sort_by' => $accommodationSortBy,
             'accommodation_sort_dir' => $accommodationSortDir,
-            'stays' => StayResource::collection($stays),
-            'stay_search' => $staySearch ?? '',
-            'stay_sort_by' => $staySortBy,
-            'stay_sort_dir' => $staySortDir,
+            // Three separate stay collections
+            'active_stays' => StayResource::collection($activeStays),
+            'active_stay_search' => $activeStaySearch ?? '',
+            'active_stay_sort_by' => $activeStaySortBy,
+            'active_stay_sort_dir' => $activeStaySortDir,
+            'past_stays' => StayResource::collection($pastStays),
+            'past_stay_search' => $pastStaySearch ?? '',
+            'past_stay_sort_by' => $pastStaySortBy,
+            'past_stay_sort_dir' => $pastStaySortDir,
+            'future_stays' => StayResource::collection($futureStays),
+            'future_stay_search' => $futureStaySearch ?? '',
+            'future_stay_sort_by' => $futureStaySortBy,
+            'future_stay_sort_dir' => $futureStaySortDir,
             'tenants' => TenantResource::collection($tenants),
             'tenant_search' => $tenantSearch ?? '',
             'tenant_sort_by' => $tenantSortBy,
