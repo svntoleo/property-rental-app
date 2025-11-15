@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { getStayStatus, formatDate } from '@/lib/format';
 
 interface Stay {
   id: number;
@@ -49,14 +50,6 @@ const form = useForm({
   cpf: props.tenant?.cpf || '',
 });
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
 function submit() {
   if (props.isEdit && props.tenant?.id) {
   const url = `/tenants/${props.tenant.id}` + (props.context === 'show' ? '?from=show' : '');
@@ -87,7 +80,7 @@ function submit() {
           :value="stay.id"
         >
           {{ stay.accommodation.property.label }} -
-          {{ stay.accommodation.label }} ({{ formatDate(stay.start_date) }} - {{ formatDate(stay.end_date) }})
+          {{ stay.accommodation.label }} ({{ formatDate(stay.start_date) }} - {{ formatDate(stay.end_date) }}) [{{ getStayStatus(stay) }}]
         </option>
       </select>
       <InputError :message="form.errors.stay_id" />

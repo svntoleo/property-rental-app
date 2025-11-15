@@ -167,7 +167,7 @@ class PropertyController extends Controller
                 'stay_sort_dir' => $staySortDir,
             ]);
 
-        // Tenants search and sorting
+        // Tenants search and sorting (only from active stays)
         $tenantSearch = request('tenant_search');
         $tenantSortBy = request('tenant_sort_by', 'name');
         $tenantSortDir = request('tenant_sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
@@ -175,8 +175,11 @@ class PropertyController extends Controller
         $tenantSortBy = in_array($tenantSortBy, $allowedTenantSorts) ? $tenantSortBy : 'name';
 
         $tenants = Tenant::with(['stay.accommodation'])
-            ->whereHas('stay.accommodation', function ($query) use ($property) {
-                $query->where('property_id', $property->id);
+            ->whereHas('stay', function ($query) use ($property) {
+                $query->active()
+                    ->whereHas('accommodation', function ($accQuery) use ($property) {
+                        $accQuery->where('property_id', $property->id);
+                    });
             })
             ->when(!empty($tenantSearch), function ($query) use ($tenantSearch) {
                 $query->where(function ($q) use ($tenantSearch) {
@@ -217,6 +220,22 @@ class PropertyController extends Controller
             })
             ->count();
 
+        // Support in-place edit modals on the show page (select options)
+        $allProperties = \App\Models\Property::select('id', 'label')->orderBy('label')->get();
+        $propertyAccommodations = \App\Models\Accommodation::with(['property:id,label'])
+            ->select('id', 'label', 'property_id')
+            ->where('property_id', $property->id)
+            ->orderBy('label')
+            ->get();
+        $expenseCategories = \App\Models\ExpenseCategory::select('id', 'label')->orderBy('label')->get();
+        $stayCategories = \App\Models\StayCategory::select('id', 'label')->orderBy('label')->get();
+        $staysForSelect = Stay::with(['accommodation.property'])
+            ->whereHas('accommodation', function ($q) use ($property) {
+                $q->where('property_id', $property->id);
+            })
+            ->orderBy('start_date', 'desc')
+            ->get();
+
         return Inertia::render('Properties/Show', [
             'property' => new PropertyResource($property),
             'expenses' => ExpenseResource::collection($expenses),
@@ -235,6 +254,12 @@ class PropertyController extends Controller
             'tenant_search' => $tenantSearch ?? '',
             'tenant_sort_by' => $tenantSortBy,
             'tenant_sort_dir' => $tenantSortDir,
+            // Select option datasets for modals
+            'properties' => $allProperties,
+            'accommodations_list' => $propertyAccommodations,
+            'expenseCategories' => $expenseCategories,
+            'stayCategories' => $stayCategories,
+            'stays_list' => $staysForSelect,
             // Monthly financial stats
             'expected_month_income' => (float) $expectedIncome,
             'expected_month_expenses' => (float) $expectedExpenses,

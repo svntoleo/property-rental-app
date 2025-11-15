@@ -53,3 +53,22 @@ export function formatCurrency(
     return `${currency} ${num.toFixed(2)}`;
   }
 }
+
+interface Stay {
+  start_date: string;
+  end_date: string;
+}
+
+export function getStayStatus(stay: Stay): 'active' | 'past' | 'future' {
+  const now = new Date();
+  const startDate = new Date(stay.start_date);
+  const endDate = new Date(stay.end_date);
+  
+  if (startDate <= now && endDate >= now) {
+    return 'active';
+  } else if (endDate < now) {
+    return 'past';
+  } else {
+    return 'future';
+  }
+}
